@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+from . import models
 
 ########################
 # MAIN DJANGO SETTINGS #
@@ -201,3 +202,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
+
+
+TeilAnlage = {
+    "Mixer" : models.OpcClient("opc.tcp://localhost:"+str(models.MIXER_PORT), models.MIXER_NAME),
+    "Reactor" : models.OpcClient("opc.tcp://localhost:"+str(models.REACTOR_PORT), models.REACTOR_NAME)
+}

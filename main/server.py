@@ -44,7 +44,7 @@ class OpcConnector:
 
     def __init__(self):
 
-        self.moka = OpcServer(4840)
+        self.mixer = OpcServer(4840)
         #self.moka.objects.get_child("0:")
         #self.moka.link_method(fill201, say_hello_xml)
 

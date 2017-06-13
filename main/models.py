@@ -5,11 +5,16 @@
 #   Getestet mit Python 3.5
 
 
-from . import settings
 from enum import Enum, unique
 from opcua import Client, ua, Node
 
+MIXER_NAME = "mixer"
+REACTOR_NAME = "reactor"
 
+MIXER_PORT = 4840
+REACTOR_PORT = 4842
+
+print("models")
 
 class OpcState(Enum):
     IDLE = 4
@@ -29,6 +34,18 @@ class OpcState(Enum):
     ABORTING = 8
     ABORTED = 9
     CLEARING = 1
+
+class OpcMethod(Enum):
+    START = 2
+    PAUSE = 6
+    RESUME = 7
+    HOLD = 4
+    UNHOLD = 5
+    RESET = 1
+    STOP = 3
+    ABORT = 8
+    CLEAR = 9
+
 
 RUN_STATES = [OpcState.RUNNING,
                   OpcState.PAUSING,
@@ -79,7 +96,6 @@ STATE_MAP = {
     b'stopped': OpcState.STOPPED,
 
 }
-
 class OpcClient(Client):
     """
     Default Client-> connects to a Server-Module with Services
@@ -94,77 +110,135 @@ class OpcClient(Client):
 
         self.connect()
         self.root = self.get_root_node()
-        self.serviceList = []  # list with opcServices
-        print(type)
+        self.ServiceList = []  # list with opcServices
+        self.type = type
         for service in self.root.get_child(["0:Objects","1:"+type,"1:ServiceList"]).get_children():
-            self.serviceList.append(OpcService(service, self))
+            self.ServiceList.append(OpcService(service, self))
 
 
     def __del__(self):
         self.disconnect()
+
+class StateChangeHandler(object):
+
+    """
+    Subscription Handler. To receive events from server for a subscription
+    data_change and event methods are called directly from receiving thread.
+    Do not do expensive, slow or network operation there. Create another
+    thread if you need to do such a thing
+    """
+    def __init__(self, service):
+        self.service = service
+
+    def datachange_notification(self, node, val, data):
+        self.service.StateChange()
+
+    def event_notification(self, event):
+        print("Python: New event", event)
 
 
 
 class OpcService:
 
     def __init__(self, node, client):
-        self.stateNode = node.get_child(["1:CurrentState"])
-        nodeval = node.get_child(["1:CurrentState"]).get_value()
+        self.node = node
+        self.stateNode = self.node.get_child(["1:CurrentState"])
         self.client = client
         self.commands = node.get_child(["1:Commands"])
         #TODO parse stateNode and subscribe currentState
-        self.__state = STATE_MAP[self.client.get_node(nodeval).get_display_name().Text]
-        print(str(node.get_display_name().Text)+" "+str(self.__state))
+
+        self.name = str(node.get_display_name().Text.decode("utf-8", "ignore"))
+        self.StateChange()
+
+        #self.StateHandler = StateChangeHandler(self)
+        #self.sub = client.create_subscription(500, self.StateHandler)
+        #self.handle = self.sub.subscribe_data_change(self.stateNode)
+
+    @property
+    def State(self):
+        nodeval = self.stateNode.get_value()
+        state = STATE_MAP[self.client.get_node(nodeval).get_display_name().Text]
+
+        self.Methods = []
+        if state in RUN_STATES:
+            self.Methods.append(OpcMethod.HOLD)
+        if  state in NORMAL_STATES:
+            self.Methods.append(OpcMethod.ABORT)
+        if state in ACTIVE_STATES:
+            self.Methods.append(OpcMethod.STOP)
+
+        if state == OpcState.IDLE:
+            self.Methods.append(OpcMethod.START)
+        elif state == OpcState.RUNNING:
+            self.Methods.append(OpcMethod.PAUSE)
+        elif state == OpcState.PAUSED:
+            self.Methods.append(OpcMethod.RESUME)
+        elif state == OpcState.HELD:
+            self.Methods.append(OpcMethod.UNHOLD)
+        elif state == OpcState.ABORTED:
+            self.Methods.append(OpcMethod.CLEAR)
+        elif state == OpcState.ABORTED or state == OpcState.STOPPED or state == OpcState.COMPLETE:
+            self.Methods.append(OpcMethod.RESET)
+
+        return state
+
+    def StateChange(self):
+        state = self.State
+        self.Methods = []
+        if state in RUN_STATES:
+            self.Methods.append(OpcMethod.HOLD)
+        if  state in NORMAL_STATES:
+            self.Methods.append(OpcMethod.ABORT)
+        if state in ACTIVE_STATES:
+            self.Methods.append(OpcMethod.STOP)
+
+        if state == OpcState.IDLE:
+            self.Methods.append(OpcMethod.START)
+        elif state == OpcState.RUNNING:
+            self.Methods.append(OpcMethod.PAUSE)
+        elif state == OpcState.PAUSED:
+            self.Methods.append(OpcMethod.RESUME)
+        elif state == OpcState.HELD:
+            self.Methods.append(OpcMethod.UNHOLD)
+        elif state == OpcState.ABORTED:
+            self.Methods.append(OpcMethod.CLEAR)
+        elif state == OpcState.ABORTED or state == OpcState.STOPPED or state == OpcState.COMPLETE:
+            self.Methods.append(OpcMethod.RESET)
 
     def _start(self):
-        assert self.__state == OpcState.IDLE
+        s = self.State
+        assert s.value == OpcState.IDLE.value
         self.commands.call_method("1:start")
-        self.__state = OpcState.RUNNING
         #autocompletes if not continous
 
     def _stop(self):
-        assert self.__state in ACTIVE_STATES
-        self.__state = OpcState.STOPPING
+        assert self.State in ACTIVE_STATES
         self.commands.call_method("1:stop")
-        self.__state = OpcState.STOPPED
 
     def _pause(self):
-        assert self.__state == OpcState.RUNNING
-        self.__state = OpcState.PAUSING
+        assert self.State == OpcState.RUNNING
         self.commands.call_method("1:pause")
-        self.__state = OpcState.PAUSED
 
     def _resume(self):
-        assert self.__state == OpcState.PAUSED
+        assert self.State == OpcState.PAUSED
         self.commands.call_method("1:resume")
-        self.__state = OpcState.RUNNING
 
     def _hold(self):
-        assert self.__state in RUN_STATES
-        self.__state = OpcState.HOLDING
+        assert self.State in RUN_STATES
         self.commands.call_method("1:hold")
-        self.__state = OpcState.HELD
 
     def _unhold(self):
-        assert self.__state == OpcState.HELD
-        self.__state = OpcState.UNHOLDING
+        assert self.State == OpcState.HELD
         self.commands.call_method("1:unhold")
-        self.__state = OpcState.RUNNING
 
     def _reset(self):
-        assert self.__state == OpcState.COMPLETE \
-               or self.__state == OpcState.STOPPED
+        assert self.State == OpcState.COMPLETE \
+               or self.State == OpcState.STOPPED
         self.commands.call_method("1:reset")
-        self.__state = OpcState.IDLE
 
     def _abort(self):
-        assert self.__state in NORMAL_STATES
-        self.__state = OpcState.ABORTING
+        assert self.State in NORMAL_STATES
         self.commands.call_method("1:abort")
-        self.__state = OpcState.ABORTED
     def _clear(self):
-        assert self.__state == OpcState.ABORTED
-        self.__state = OpcState.CLEARING
+        assert self.State == OpcState.ABORTED
         self.commands.call_method("1:clear")
-        self.__state = OpcState.STOPPED
-

@@ -11,10 +11,33 @@ from django.template.response import TemplateResponse
 from django.http import JsonResponse, HttpResponse
 from .forms import *
 from .models import *
-import configobj, os
+from .settings import *
+import os
 import logging
 logger = logging.getLogger('django')
 
+print("views")
+
 @login_required
 def home(request):
-    return TemplateResponse(request, 'home.html', {})
+    if request.method == 'POST':
+        selectedModule = ''
+        if request.POST.get('module') == 'Mixer':
+            selectedModule = TeilAnlage["Mixer"]
+        else:
+            selectedModule = TeilAnlage['Reactor']
+
+        selectedService = ''
+        for Service in selectedModule.ServiceList:
+            if Service.name == request.POST['service']:
+                selectedService = Service
+                break
+        if 'START' == request.POST.get('method'):
+            selectedService._start()
+        elif 'STOP' == request.POST.get('method'):
+            selectedService._stop()
+        elif 'RESET' == request.POST.get('method'):
+            selectedService._reset()
+        elif 'ABORT' == request.POST.get('method'):
+            selectedService._abort()
+    return TemplateResponse(request, 'home.html', {"Teilanlage" : TeilAnlage})
