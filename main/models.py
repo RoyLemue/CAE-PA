@@ -7,6 +7,7 @@
 
 from enum import Enum, unique
 from opcua import Client, ua, Node
+import xml.etree.ElementTree as et
 
 MIXER_NAME = "mixer"
 REACTOR_NAME = "reactor"
@@ -114,10 +115,15 @@ class OpcClient(Client):
         self.type = type
         for service in self.root.get_child(["0:Objects","1:"+type,"1:ServiceList"]).get_children():
             self.ServiceList.append(OpcService(service, self))
-
+    def getService(self, serviceName):
+        for s in self.ServiceList:
+            if s.name == serviceName:
+                return s
+        return None
 
     def __del__(self):
         self.disconnect()
+
 
 class StateChangeHandler(object):
 
@@ -131,11 +137,85 @@ class StateChangeHandler(object):
         self.service = service
 
     def datachange_notification(self, node, val, data):
-        self.service.StateChange()
+        self.service.setState(val)
 
-    def event_notification(self, event):
-        print("Python: New event", event)
+class XmlServiceInterface:
+    def __init__(self, InterfaceNode):
+        self.name = InterfaceNode.find('ServiceName').text
+        self.opcName = InterfaceNode.find('OPC_UA_Methodenname').text
+        self.continous = bool(InterfaceNode.find('Konti').text)
+        self.parameters = {}
+        for paramNode in InterfaceNode.findall('parameter'):
+            paramType = paramNode.find('type').text
+            paramName = paramNode.find('name').text
+            self.parameters[paramName] = paramType
 
+class XmlModulInterface:
+    def __init__(self, InterfaceNode):
+        self.name = InterfaceNode.find('Modulschnittstellenabfrage').text
+        self.opcName = InterfaceNode.find('OPC_UA_Name').text
+        self.services = []
+        for service in InterfaceNode.findall('Dienst'):
+            self.services.append(XmlServiceInterface(service))
+
+class XmlRecipeInterface:
+    def __init__(self, InterfaceNode):
+        self.name = InterfaceNode.find("Schnittstellenabfrage").text
+        self.modules = []
+        for module in InterfaceNode.findall('Modulschnittstelle'):
+            self.modules.append(XmlModulInterface(module))
+
+    def getServiceInterface(self, ServiceName):
+        for module in self.modules:
+            for service in module.services:
+                if service.name == ServiceName:
+                    return service
+        return None
+
+class BlockType(Enum):
+    SERIAL = 1
+    PARALLEL = 2
+
+class XmlServiceInstance:
+    def __init__(self, Node, interface):
+        self.name = Node.find('Service').text
+        self.type = interface.getServiceInterface(self.name)
+        self.parameters = []
+        for p in Node.find('Parameter'):
+            self.parameters.append({
+                'type' : self.type.parameters[p.find('Name').text],
+                'name' : self.type.parameters.name,
+                'value': p.find('Value').text
+            })
+
+class XmlBlock(Enum):
+    def __init__(self, Node, interface):
+        self.name = Node.find('Name').text
+        if Node.find('Type').text == 'Serial':
+            self.type = BlockType.SERIAL
+        else:
+            self.type = BlockType.PARALLEL
+        self.childs = []
+        for child in Node.find('Childs'):
+            if child.tag == 'Dienst':
+                self.childs.append(XmlServiceInstance(child, interface))
+            if child.tag == 'Block':
+                self.childs.append(XmlBlock(child, interface))
+
+class XmlRecipeInstance:
+    def __init__(self, Node, interface):
+        self.name = Node.find('Rezeptname').text
+        self.RunBlock = XmlBlock(Node.find('RunBlock', interface))
+        self.StopBlock = XmlBlock(Node.find('StopBlock', interface))
+
+
+class XmlParser:
+    def __init__(self, xmlFile):
+        tree = et.parse(xmlFile)
+        root = tree.getroot() #ComosXmlExport Element
+        anlage = root.find('Anlage')
+        self.interface = XmlRecipeInterface(anlage.find('Schnittstelle'))
+        self.recipe = XmlRecipeInstance(anlage.find('Rezept'), self.interface)
 
 
 class OpcService:
@@ -148,62 +228,56 @@ class OpcService:
         #TODO parse stateNode and subscribe currentState
 
         self.name = str(node.get_display_name().Text.decode("utf-8", "ignore"))
-        self.StateChange()
+        self.stateMap = {}
+        for state in node.get_child(["1:States"]).get_children():
+            self.stateMap[state.nodeid] = STATE_MAP[state.get_display_name().Text]
 
-        #self.StateHandler = StateChangeHandler(self)
-        #self.sub = client.create_subscription(500, self.StateHandler)
-        #self.handle = self.sub.subscribe_data_change(self.stateNode)
+        self.StateHandler = StateChangeHandler(self)
+        self.sub = client.create_subscription(500, self.StateHandler)
+        self.handle = self.sub.subscribe_data_change(self.stateNode)
+
+
+
+        self.parameterNode = self.node.get_child(["1:ParameterList"])
+        self.parameters = {}
+        for p in self.parameterNode.get_children():
+            self.parameters[p.get_display_name()] = p
+
+
+    def setParam(self, name, value):
+        self.parameters[name].set_value(value)
 
     @property
     def State(self):
-        nodeval = self.stateNode.get_value()
-        state = STATE_MAP[self.client.get_node(nodeval).get_display_name().Text]
+        return self.__state
 
+    def setState(self, nodeval):
+        self.__state = self.stateMap[nodeval]
         self.Methods = []
-        if state in RUN_STATES:
+        if self.__state in RUN_STATES:
             self.Methods.append(OpcMethod.HOLD)
-        if  state in NORMAL_STATES:
+        if  self.__state in NORMAL_STATES:
             self.Methods.append(OpcMethod.ABORT)
-        if state in ACTIVE_STATES:
+        if self.__state in ACTIVE_STATES:
             self.Methods.append(OpcMethod.STOP)
 
-        if state == OpcState.IDLE:
+        if self.__state == OpcState.IDLE:
             self.Methods.append(OpcMethod.START)
-        elif state == OpcState.RUNNING:
+        elif self.__state == OpcState.RUNNING:
             self.Methods.append(OpcMethod.PAUSE)
-        elif state == OpcState.PAUSED:
+        elif self.__state == OpcState.PAUSED:
             self.Methods.append(OpcMethod.RESUME)
-        elif state == OpcState.HELD:
+        elif self.__state == OpcState.HELD:
             self.Methods.append(OpcMethod.UNHOLD)
-        elif state == OpcState.ABORTED:
+        elif self.__state == OpcState.ABORTED:
             self.Methods.append(OpcMethod.CLEAR)
-        elif state == OpcState.ABORTED or state == OpcState.STOPPED or state == OpcState.COMPLETE:
+        elif self.__state == OpcState.ABORTED or self.__state == OpcState.STOPPED or self.__state == OpcState.COMPLETE:
             self.Methods.append(OpcMethod.RESET)
-
-        return state
 
     def StateChange(self):
-        state = self.State
-        self.Methods = []
-        if state in RUN_STATES:
-            self.Methods.append(OpcMethod.HOLD)
-        if  state in NORMAL_STATES:
-            self.Methods.append(OpcMethod.ABORT)
-        if state in ACTIVE_STATES:
-            self.Methods.append(OpcMethod.STOP)
+        nodeval = self.stateNode.get_value()
+        self.setState(nodeval)
 
-        if state == OpcState.IDLE:
-            self.Methods.append(OpcMethod.START)
-        elif state == OpcState.RUNNING:
-            self.Methods.append(OpcMethod.PAUSE)
-        elif state == OpcState.PAUSED:
-            self.Methods.append(OpcMethod.RESUME)
-        elif state == OpcState.HELD:
-            self.Methods.append(OpcMethod.UNHOLD)
-        elif state == OpcState.ABORTED:
-            self.Methods.append(OpcMethod.CLEAR)
-        elif state == OpcState.ABORTED or state == OpcState.STOPPED or state == OpcState.COMPLETE:
-            self.Methods.append(OpcMethod.RESET)
 
     def _start(self):
         s = self.State

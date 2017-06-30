@@ -203,7 +203,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-
+# TODO create from XML ( Work from Group 3)
 TeilAnlage = {
     "Mixer" : models.OpcClient("opc.tcp://localhost:"+str(models.MIXER_PORT), models.MIXER_NAME),
     "Reactor" : models.OpcClient("opc.tcp://localhost:"+str(models.REACTOR_PORT), models.REACTOR_NAME)

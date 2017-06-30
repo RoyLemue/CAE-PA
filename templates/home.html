@@ -4,6 +4,31 @@
 
 {% block js_ready %}
 
+    var moduleList = new Array();
+    var mokaModuleNode = $(".MokaModule").first();
+    var module;
+    var service, serviceNode;
+    {% for name, module in Teilanlage.items %}
+        module = new MokaModule(mokaModuleNode, '{{name}}' )
+        moduleList.push(module);
+        serviceNode = mokaModuleNode.children("table").children("tbody").children().first();
+        {% for service in module.ServiceList %}
+            module.services.push(new MokaService(serviceNode, module, '{{service.name}}' ));
+            serviceNode = serviceNode.next();
+        {% endfor %}
+        mokaModuleNode = mokaModuleNode.next();
+    {% endfor %}
+
+    function updateMethods(){
+        moduleList.forEach(function(module, index, array){
+            module.services.forEach(function(updateservice, index){
+                updateservice.updateState();
+            });
+        });
+    }
+    //updateMethods();
+    setInterval(updateMethods , 1000);
+
 {% endblock %}
 
 {% block content %}
@@ -12,45 +37,66 @@
         <h1>Status</h1>
     </div>
     <div class="row">
-        <table class="table table-hover">
+
+        {% for name, module in Teilanlage.items %}
+        <div class="MokaModule col-xs-6">
+        <h1>{{name}}</h1>
+        <table class="table table-hover" id="serviceTable">
             <thead>
                 <tr>
-                    <th>Modul</th>
+                    <th>Dienst</th>
                     <th>Zustand</th>
+                    <th>Methoden</th>
                 </tr>
             </thead>
             <tbody>
-                {% for module in modules %}
+                {% for service in module.ServiceList %}
                 <tr>
-                    <td>{{conf.data.Header.ModulId}}</td>
-                    <td>{{conf.data.Header.ModulName}}</td>
-                    <td>{{conf.data.Header.Professor}}</td>
-                    <td>{{conf.data.Content.CreditPoints}}</td>
+                    <td>{{service.name}}</td>
+                    <td>{{service.State.name}}</td>
+                    <td>
+                        <div class="text-center topButtonGroup">
+                             <div class="btn-group text-center" role="group" aria-label="...">
+                        {% for method in service.Methods %}
+                              <a class="btn btn-primary" href="#" onclick="callServiceMethod( '{{name}}','{{service.name}}','{{method.name}}' )">{{method.name}}</a>
+                        {% endfor %}
+                        </div></div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <h1>Rezeptparameter</h1>
-        Datei:
+        </div>
+        {% endfor %}
+
+        <h1>Laufende Jobs</h1>
+        keine
+        <h1>Rezepte</h1>
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Rezeptschritt</th>
-                    <th>Parametername</th>
-                    <th>Wert</th>
+                    <th>Rezeptdatei</th>
+                    <th>Datum</th>
+                    <th>Funktionen</th>
                 </tr>
             </thead>
             <tbody>
-                {% for param in recipeparams %}
+                {% for recipe in Recipes %}
                 <tr>
-                    <td>{{param.step}}</td>
-                    <td>{{param.name}}</td>
-                    <td>{{param.value}}</td>
+                    <td>{{recipe}}</td>
+                    <td></td>
+                    <td>
+                        <div class="text-center topButtonGroup">
+                            <div class="btn-group text-center" role="group" aria-label="...">
+                              <a class="btn btn-primary" href="/recipe/{{recipe}}/change/">Bearbeiten</a>
+                              <a class="btn btn-success" href="#" onclick="startrecipe('{{recipe}}')">Start</a>
+                            </div>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <button>Rezept starten</button>
     </div>
 </div>
 {% endblock %}

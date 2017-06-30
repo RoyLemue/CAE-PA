@@ -28,6 +28,7 @@ class OpcServerThread(threading.Thread):
         subprocess.call([os.path.join(BUILD_DIR, "uamoduleserver_"+self.name), str(self.port), self.name])
 
 def main():
+    # xmldata = XmlParser(os.path.join(PROJCET_ROOT, *['main', 'xml', 'example.xml']))
     # parse command line options
     mixName = "mixer"
     reactorName = "reactor"

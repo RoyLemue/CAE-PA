@@ -26,6 +26,12 @@ urlpatterns = [
     #url(r'^pdf/module/(?P<moduleId>[\w-]+)/$', views.ShowModulePdf, name="Generate Module Pdf"),
     url(r'^login/$', django.contrib.auth.views.login,  name='studien_login'),
     url(r'^logout/$', django.contrib.auth.views.logout, name='studien_logout'),
+    url(r'^module/(?P<moduleName>[\w-]+)/getstate/(?P<serviceName>[\w]+)/$', views.getState, name="Get State"),
+    url(r'^module/(?P<moduleName>[\w-]+)/call/(?P<serviceName>[\w]+)/(?P<methodName>[\w]+)/$', views.methodCall, name="Home View"),
+
+    url(r'^recipe/start/(?P<recipeName>[\w-]+)/$', views.recipeStart, name="Home View"),
+    url(r'^recipe/pause/(?P<recipeName>[\w-]+)/$', views.recipePause, name="Home View"),
+    url(r'^recipe/stop/(?P<recipeName>[\w-]+)/$', views.recipeStop, name="Home View"),
     #url(static(settings.STATIC_URL, serve=True)),
     #url(r'^ajax/price/(?P<aktien>[0-9]+)/$', views.ajaxPrice, name="AjaxPreis"),
     # Catchall

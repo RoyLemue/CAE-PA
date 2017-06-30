@@ -23,6 +23,7 @@ class OpcServer(Server):
         self.objects = self.get_objects_node()
 
 
+
 class OpcConnector:
     def fill201(self, nodeId):
         pass
