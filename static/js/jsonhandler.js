@@ -14,10 +14,22 @@ var MokaService = function(element, mokaModule, serviceName, options){
     var self = this;
 
     this.jsonStateFunction = function(data) {
+                var stateCol, methodCol, buttonGroup;
+                stateCol = self.$element.children().first().next();
+                methodCol = self.$element.children().first().next().next();
+                buttonGroup = methodCol.children().first();
+                console.log(self);
+                console.log(this);
                 if (data.status == 'OK'){
                     self.functions = data.methods;
                     self.state = data.state;
-                    self.$element.children().first().next().html(data.state);
+                    stateCol.html(data.state);
+                    buttonGroup.html('<div class="btn-group text-center" role="group" aria-label="...">');
+                    data.methods.forEach(function(method, index){
+                        buttonGroup.append('<a class="btn btn-primary" href="#" onclick="callServiceMethod( \''+self.mokaModule.name+'\',\''+self.serviceName+'\',\''+method+'\' )">'+method+'</a>');
+                    });
+
+
                 }
         };
 

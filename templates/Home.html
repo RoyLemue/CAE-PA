@@ -1,0 +1,103 @@
+{% extends "Base.html" %}
+
+{% load i18n staticfiles %}
+
+{% block js_ready %}
+
+    var moduleList = new Array();
+    var mokaModuleNode = $(".MokaModule").first();
+    var module;
+    var service, serviceNode;
+    {% for name, module in Teilanlage.items %}
+        module = new MokaModule(mokaModuleNode, '{{name}}' )
+        moduleList.push(module);
+        serviceNode = mokaModuleNode.children("table").children("tbody").children().first();
+        {% for service in module.ServiceList %}
+            module.services.push(new MokaService(serviceNode, module, '{{service.name}}' ));
+            serviceNode = serviceNode.next();
+        {% endfor %}
+        mokaModuleNode = mokaModuleNode.next();
+    {% endfor %}
+
+    function updateMethods(){
+        moduleList.forEach(function(module, index, array){
+            module.services.forEach(function(updateservice, index){
+                updateservice.updateState();
+            });
+        });
+    }
+    //updateMethods();
+    setInterval(updateMethods , 5000);
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Status</h1>
+    </div>
+    <div class="row">
+
+        {% for name, module in Teilanlage.items %}
+        <div class="MokaModule col-xs-6">
+        <h1>{{name}}</h1>
+        <table class="table table-hover" id="serviceTable">
+            <thead>
+                <tr>
+                    <th>Dienst</th>
+                    <th>Zustand</th>
+                    <th>Methoden</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in module.ServiceList %}
+                <tr>
+                    <td>{{service.name}}</td>
+                    <td>{{service.State.name}}</td>
+                    <td>
+                        <div class="text-center topButtonGroup">
+                             <div class="btn-group text-center" role="group" aria-label="...">
+                        {% for method in service.Methods %}
+                              <a class="btn btn-primary" href="#" onclick="callServiceMethod( '{{name}}','{{service.name}}','{{method.name}}' )">{{method.name}}</a>
+                        {% endfor %}
+                        </div></div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endfor %}
+
+        <h1>Laufende Jobs</h1>
+        keine
+        <h1>Rezepte</h1>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Rezeptdatei</th>
+                    <th>Datum</th>
+                    <th>Funktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for recipe in Recipes %}
+                <tr>
+                    <td>{{recipe}}</td>
+                    <td></td>
+                    <td>
+                        <div class="text-center topButtonGroup">
+                            <div class="btn-group text-center" role="group" aria-label="...">
+                              <a class="btn btn-primary" href="/recipe/{{recipe}}/change/">Bearbeiten</a>
+                              <a class="btn btn-success" href="#" onclick="startrecipe('{{recipe}}')">Start</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

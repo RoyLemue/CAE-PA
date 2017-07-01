@@ -1,0 +1,10 @@
+{{block.name}}
+<table>
+    <tbody>
+        <tr>
+            {% for child in block.childs %}
+                <td>{% include "include/Block.html" with block=child %}</td>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>

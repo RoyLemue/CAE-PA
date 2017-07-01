@@ -57,8 +57,8 @@ def getState(request, moduleName, serviceName):
     service = TeilAnlage[moduleName].getService(serviceName)
     stringMethods = []
     for m in service.Methods:
-        stringMethods.append(str(m))
-    return JsonResponse({'status' : 'OK', 'state' : str(service.State), 'methods' : stringMethods})
+        stringMethods.append(str(m).split('.')[1])
+    return JsonResponse({'status' : 'OK', 'state' : str(service.State).split('.')[1], 'methods' : stringMethods})
 
 @login_required
 def methodCall(request, moduleName, serviceName, methodName):
@@ -67,7 +67,7 @@ def methodCall(request, moduleName, serviceName, methodName):
         service = TeilAnlage[moduleName].getService(serviceName)
         service.commands.call_method("1:"+methodName)
         state = service.State
-        return JsonResponse({'status' : 'OK', 'state' : str(state)})
+        return JsonResponse({'status' : 'OK', 'state' : str(state).split('.')[1]})
     return JsonResponse({'status' : 'ERROR'})
 
 @login_required
@@ -96,4 +96,4 @@ def home(request):
     recipes = []
     for file in os.listdir(RECIPE_DIR):
         recipes.append(file)
-    return TemplateResponse(request, 'home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes})
+    return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes})

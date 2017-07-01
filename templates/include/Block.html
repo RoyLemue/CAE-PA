@@ -1,0 +1,7 @@
+{% if block.type == "serial" %}
+    {% include "include/SerialBlock.html" with block=block %}
+{% elif block.type == "parallel" %}
+    {% include "include/ParallelBlock.html" with block=block %}
+{% else %}
+    <h2>{{block.name}}</h2>
+{% endif %}

@@ -1,0 +1,8 @@
+<div class="row">
+    <h1>Rezeptaufbau</h1>
+    <div class="col-xs-4"><h3>Ersteller: {{tree.author}}</h3></div>
+    <div class="col-xs-4"><h3>Erstelldatum: {{tree.date}}</h3></div>
+    <div class="col-xs-4"><h3>Zweck: {{tree.title}}</h3></div>
+</div>
+
+{% include "include/Block.html" with block=tree.root %}

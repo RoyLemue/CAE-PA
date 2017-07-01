@@ -1,0 +1,6 @@
+<h3>{{block.name}}</h3>
+{% for child in block.childs %}
+<div class="row">
+    {% include "include/Modulform.html" with block=child %}
+</div>
+{% endfor %}

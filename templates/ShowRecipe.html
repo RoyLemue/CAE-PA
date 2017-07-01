@@ -27,20 +27,25 @@
         });
     }
     //updateMethods();
-    setInterval(updateMethods , 1000);
+    setInterval(updateMethods , 5000);
 
 {% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="page-header">
-        <h1>Status</h1>
+        <h1>Status: Waiting/In Process/Finished/Aborted</h1>
     </div>
+    <div class="text-center topButtonGroup">
+        <div class="btn-group text-center" role="group" aria-label="...">
+            <a class="btn btn-primary" href="#" onclick="">Pause if Recipe in Process</a>
+    </div></div>
+
     <div class="row">
 
         {% for name, module in Teilanlage.items %}
         <div class="MokaModule col-xs-6">
-        <h1>{{name}}</h1>
+        <h3>{{name}}</h3>
         <table class="table table-hover" id="serviceTable">
             <thead>
                 <tr>
@@ -69,7 +74,11 @@
         </div>
         {% endfor %}
 
-        <h1>Laufende Jobs</h1>
+    </div>
+    {% include "include/Modulform.html" with form=modulform %}
+    <div class="row">
+
+
         keine
         <h1>Rezepte</h1>
         <table class="table table-hover">
