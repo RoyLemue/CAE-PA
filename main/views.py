@@ -33,7 +33,8 @@ def recipeStart(request, recipeName):
     module = request.post.get("modul")
     service = request.post.get("service")
     method = request.post.get("method")
-    TeilAnlage
+    parser = XmlParser(recipeName)
+    recipeHandler.start(parser.tree)
     return JsonResponse({'status' : 'OK'})
 
 @login_required
