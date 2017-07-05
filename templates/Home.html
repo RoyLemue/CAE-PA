@@ -74,6 +74,29 @@
         <h1>Rezepte</h1>
         <table class="table table-hover">
             <thead>
+              <tr>
+                  <th> Neue XML-Datei hochladen </th>
+              </tr>
+            </thead>
+          <tbody>
+            <tr>
+                <td>
+
+                    <form action="{{ request.build_absolute_uri }}upload/" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <th>
+                        <input type="file" name="file"/>
+                    </th> <th>
+                        <input type="submit" value="Upload File" href="{% url 'Home View' %}"/>
+                </th>
+                </form>
+
+                </tr>
+
+          </tbody>
+        </table>
+        <table class="table table-hover">
+            <thead>
                 <tr>
                     <th>Rezeptdatei</th>
                     <th>Datum</th>

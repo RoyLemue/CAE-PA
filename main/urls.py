@@ -28,7 +28,7 @@ urlpatterns = [
     url(r'^logout/$', django.contrib.auth.views.logout, name='studien_logout'),
     url(r'^module/(?P<moduleName>[\w-]+)/getstate/(?P<serviceName>[\w]+)/$', views.getState, name="Get State"),
     url(r'^module/(?P<moduleName>[\w-]+)/call/(?P<serviceName>[\w]+)/(?P<methodName>[\w]+)/$', views.methodCall, name="Home View"),
-
+    url(r'^upload/', views.uploadRecipes, name="Home View"),
     url(r'^recipe/start/(?P<recipeName>[\w-]+)/$', views.recipeStart, name="JSON Start Recipe"),
     url(r'^recipe/pause/(?P<recipeName>[\w-]+)/$', views.recipePause, name="JSON Pause Recipe"),
     url(r'^recipe/stop/(?P<recipeName>[\w-]+)/$', views.recipeStop, name="JSON stop Recipe"),
