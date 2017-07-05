@@ -1,1 +1,13 @@
 .idea/
+
+# zip files
+*.zip
+
+# directories
+log/
+recipe/
+topologie/
+
+
+#files
+db.sqlite3
