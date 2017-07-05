@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
 from django.http import JsonResponse, HttpResponse
-from .forms import *
+#from .forms import *
 from .models import *
 from .settings import *
 import os
@@ -18,7 +18,8 @@ logger = logging.getLogger('django')
 
 print("views")
 
-RECIPE_DIR = os.path.join(STATIC_ROOT, *['media', 'recipes'])
+RECIPE_DIR = os.path.join('recipe')#os.path.join(STATIC_ROOT, *['media', 'recipes'])
+TOPOLOGIE_DIR = os.path.join('topologie')
 
 @login_required
 def jsonMethodCall(request):
@@ -97,4 +98,60 @@ def home(request):
     recipes = []
     for file in os.listdir(RECIPE_DIR):
         recipes.append(file)
+
+    topologies = []
+    for file in os.listdir(TOPOLOGIE_DIR):
+            topologies.append(file)
+
+    return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes, 'Topologies' : topologies })
+
+def uploadRecipes(request):
+    if request.method == 'POST':
+        handle_uploaded_recipe(request.FILES['file'], str(request.FILES['file']))
+
+        recipes = []
+        for file in os.listdir(RECIPE_DIR):
+            recipes.append(file)
+
     return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes})
+
+    return HttpResponse("Failed")
+
+def handle_uploaded_recipe(file, filename):
+    if not os.path.exists('recipe/'):
+        os.mkdir('recipe/')
+
+    with open('recipe/' + filename, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+
+def uploadStructure(request):
+    if request.method == 'POST':
+        handle_uploaded_structure(request.FILES['file'], str(request.FILES['file']))
+
+        recipes = []
+        for file in os.listdir(RECIPE_DIR):
+            recipes.append(file)
+
+        topologies = []
+        for file in os.listdir(TOPOLOGIE_DIR):
+            topologies.append(file)
+
+    return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes, "Topologies" : topologies})
+
+    return HttpResponse("Failed")
+
+def handle_uploaded_structure(file, filename):
+    if not os.path.exists('topologie/'):
+        os.mkdir('topologie/')
+
+    with open('topologie/' + filename, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+
+
+
+
+
+
+
