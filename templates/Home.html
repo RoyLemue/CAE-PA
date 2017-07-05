@@ -75,14 +75,14 @@
         <table class="table table-hover">
             <thead>
               <tr>
-                  <th> Neue XML-Datei hochladen </th>
+                  <th> Neues XML-Rezept hochladen </th>
               </tr>
             </thead>
           <tbody>
             <tr>
                 <td>
 
-                    <form action="{{ request.build_absolute_uri }}upload/" method="POST" enctype="multipart/form-data">
+                    <form action="{{ request.build_absolute_uri }}uploadRecipe/" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <th>
                         <input type="file" name="file"/>
@@ -121,6 +121,56 @@
             </tbody>
         </table>
     </div>
+     <h1>Anlagentopologie</h1>
+        <table class="table table-hover">
+            <thead>
+              <tr>
+                  <th> Neue XML-Anlagentopologie hochladen </th>
+              </tr>
+            </thead>
+          <tbody>
+            <tr>
+                <td>
+
+                    <form action="{{ request.build_absolute_uri }}uploadTopologie/" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <th>
+                        <input type="file" name="file"/>
+                    </th> <th>
+                        <input type="submit" value="Upload File" href="{% url 'Home View' %}"/>
+                </th>
+                </form>
+
+                </tr>
+
+          </tbody>
+        </table>
+         <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Topologiedatei</th>
+                    <th>Datum</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for topologie in Topologies %}
+                <tr>
+                    <td>{{topologie}}</td>
+                    <td></td>
+                    <td>
+                        <div class="text-center topButtonGroup">
+                            <div class="btn-group text-center" role="group" aria-label="...">
+                              <a class="btn btn-primary" >Anschauen</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+
 </div>
 {% endblock %}
 
