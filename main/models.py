@@ -5,8 +5,12 @@
 #   Getestet mit Python 3.5
 
 
-from enum import Enum, unique
+from enum import Enum
 from opcua import Client, ua, Node
+import os
+from main.settings import *
+
+from main.xmlmodels import XmlParser
 
 MIXER_NAME = "mixer"
 REACTOR_NAME = "reactor"
@@ -46,24 +50,31 @@ class OpcMethod(Enum):
     ABORT = 8
     CLEAR = 9
 
+class RecipeState(Enum):
+    WAIT = 1
+    RUN = 2
+    FAILED = 3
+    ABORTED = 4
+    COMPLETED = 5
+
+class RecipeCommand(Enum):
+    START = 1
+    STOP = 2
+    PAUSE = 3
+
+
+class RecipeElementState(Enum):
+    WAITING = 1
+    RUNNING = 2
+    COMPLETED = 3
+    ABORTED = 4
+
 class RecipeType:
     def __init__(self, start, running, complete):
         self.start = start
         self.running = running
         self.complete = complete
 
-
-RECIPE_COMMAND = {
-    OpcMethod.START : RecipeType([OpcState.IDLE], [OpcState.STARTING], [OpcState.RUNNING]),
-    OpcMethod.PAUSE : OpcState.PAUSED,
-    OpcMethod.RESUME: OpcState.RUNNING,
-    OpcMethod.HOLD: OpcState.HELD,
-    OpcMethod.UNHOLD: OpcState.RUNNING,
-    OpcMethod.RESET: OpcState.IDLE,
-    OpcMethod.STOP: OpcState.STOPPED,
-    OpcMethod.ABORT: OpcState.ABORTED,
-    OpcMethod.CLEAR: OpcState.STOPPED,
-}
 
 
 RUN_STATES = [OpcState.RUNNING,
@@ -100,6 +111,19 @@ NORMAL_STATES = [OpcState.RUNNING,
                  OpcState.STOPPED,
                  OpcState.CLEARING]
 
+#Allowed Starting States and Running States and the completing State
+RECIPE_COMMAND = {
+    OpcMethod.START : RecipeType([OpcState.IDLE], [OpcState.STARTING], [OpcState.RUNNING]),
+    OpcMethod.PAUSE : RecipeType([OpcState.RUNNING],[OpcState.PAUSING],[OpcState.PAUSED]),
+    OpcMethod.RESUME: RecipeType([OpcState.PAUSED],[OpcState.RESUMING],[OpcState.RUNNING]),
+    OpcMethod.HOLD: RecipeType(RUN_STATES,[OpcState.HOLDING],[OpcState.HELD]),
+    OpcMethod.UNHOLD: RecipeType([OpcState.HELD],[OpcState.UNHOLDING],[OpcState.RUNNING]),
+    OpcMethod.RESET: RecipeType([OpcState.COMPLETE, OpcState.STOPPED, OpcState.ABORTED],[OpcState.RESETTING],[OpcState.IDLE]),
+    OpcMethod.STOP: RecipeType(ACTIVE_STATES,[OpcState.STOPPING],[OpcState.STOPPED]),
+    OpcMethod.ABORT: RecipeType(NORMAL_STATES,[OpcState.ABORTING],[OpcState.ABORTED]),
+    OpcMethod.CLEAR: RecipeType([OpcState.ABORTED],[OpcState.CLEARING],[OpcState.STOPPED]),
+}
+
 STATE_MAP = {
     b'idle' : OpcState.IDLE,
     b'complete' : OpcState.COMPLETE,
@@ -113,8 +137,19 @@ STATE_MAP = {
     b'unholding': OpcState.UNHOLDING,
     b'stopping': OpcState.STOPPING,
     b'stopped': OpcState.STOPPED,
-
 }
+METHOD_MAP = {
+    'start' : OpcMethod.START,
+    'pause': OpcMethod.PAUSE,
+    'resume': OpcMethod.RESUME,
+    'hold': OpcMethod.HOLD,
+    'unhold': OpcMethod.UNHOLD,
+    'reset': OpcMethod.RESET,
+    'stop': OpcMethod.STOP,
+    'abort': OpcMethod.ABORT,
+    'clear': OpcMethod.CLEAR,
+}
+
 class OpcClient(Client):
     """
     Default Client-> connects to a Server-Module with Services
@@ -157,6 +192,41 @@ class StateChangeHandler(object):
     def datachange_notification(self, node, val, data):
         self.service.setState(val)
 
+class RecipeElement:
+    def __init__(self, service, method):
+        self.service = service
+        self.methodName = method.lower()
+        self.type = RECIPE_COMMAND[METHOD_MAP[self.methodName]]
+        self.state = RecipeElementState.WAITING
+
+    def execute(self):
+        if self.service.State in self.type.start:
+            self.service.callMethod(self.methodName)
+
+class Recipe:
+    def __init__(self, filename):
+        self.id = id
+        self.filename = filename
+        self.parser = XmlParser(filename)
+
+class Topology:
+    def __init__(self, filename):
+        self.id = id
+        self.fileName = filename
+
+
+class RecipeHandler:
+    def __init__(self):
+        recipes = []
+        self.recipeId = 0
+        for file in os.listdir(RECIPE_DIR):
+            recipes.append(Recipe(self.RecipeId,file))
+        self.topologyId = 0
+        topologies = []
+        for file in os.listdir(TOPOLOGIE_DIR):
+            topologies.append(Topologyfile))
+            self.topologyId += 1
+        self.actualTopology = topologies[0]
 
 class OpcService:
 
@@ -218,41 +288,9 @@ class OpcService:
         nodeval = self.stateNode.get_value()
         self.setState(nodeval)
 
-
-    def _start(self):
-        s = self.State
-        assert s.value == OpcState.IDLE.value
-        self.commands.call_method("1:start")
-        #autocompletes if not continous
-
-    def _stop(self):
-        assert self.State in ACTIVE_STATES
-        self.commands.call_method("1:stop")
-
-    def _pause(self):
-        assert self.State == OpcState.RUNNING
-        self.commands.call_method("1:pause")
-
-    def _resume(self):
-        assert self.State == OpcState.PAUSED
-        self.commands.call_method("1:resume")
-
-    def _hold(self):
-        assert self.State in RUN_STATES
-        self.commands.call_method("1:hold")
-
-    def _unhold(self):
-        assert self.State == OpcState.HELD
-        self.commands.call_method("1:unhold")
-
-    def _reset(self):
-        assert self.State == OpcState.COMPLETE \
-               or self.State == OpcState.STOPPED
-        self.commands.call_method("1:reset")
-
-    def _abort(self):
-        assert self.State in NORMAL_STATES
-        self.commands.call_method("1:abort")
-    def _clear(self):
-        assert self.State == OpcState.ABORTED
-        self.commands.call_method("1:clear")
+    def callMethod(self, method):
+        methodName = method.lower()
+        recipeType = RECIPE_COMMAND[METHOD_MAP[methodName]]
+        test = ''
+        if self.State in recipeType.start:
+            self.commands.call_method("1:"+method)
