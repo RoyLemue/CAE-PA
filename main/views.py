@@ -18,15 +18,11 @@ logger = logging.getLogger('django')
 
 print("views")
 
-RECIPE_DIR = os.path.join('recipe')#os.path.join(STATIC_ROOT, *['media', 'recipes'])
-TOPOLOGIE_DIR = os.path.join('topologie')
-
 @login_required
 def jsonMethodCall(request):
     module = request.post.get("modul")
     service = request.post.get("service")
     method = request.post.get("method")
-    TeilAnlage
     return JsonResponse({'status' : 'OK'})
 
 @login_required
@@ -65,36 +61,15 @@ def getState(request, moduleName, serviceName):
 @login_required
 def methodCall(request, moduleName, serviceName, methodName):
     methodName = methodName.lower()
-    if methodName in ['start', 'stop', 'pause', 'resume', 'reset']:
+    if methodName in METHOD_MAP.keys():
         service = TeilAnlage[moduleName].getService(serviceName)
-        service.commands.call_method("1:"+methodName)
+        service.callMethod(methodName)
         state = service.State
         return JsonResponse({'status' : 'OK', 'state' : str(state).split('.')[1]})
     return JsonResponse({'status' : 'ERROR'})
 
 @login_required
 def home(request):
-    if request.method == 'POST':
-        selectedModule = ''
-        if request.POST.get('module') == 'Mixer':
-            selectedModule = TeilAnlage["Mixer"]
-        else:
-            selectedModule = TeilAnlage['Reactor']
-
-        selectedService = ''
-        for Service in selectedModule.ServiceList:
-            if Service.name == request.POST['service']:
-                selectedService = Service
-                break
-        if 'START' == request.POST.get('method'):
-            selectedService._start()
-        elif 'STOP' == request.POST.get('method'):
-            selectedService._stop()
-        elif 'RESET' == request.POST.get('method'):
-            selectedService._reset()
-        elif 'ABORT' == request.POST.get('method'):
-            selectedService._abort()
-
     recipes = []
     for file in os.listdir(RECIPE_DIR):
         recipes.append(file)

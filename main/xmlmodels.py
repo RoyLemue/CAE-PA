@@ -5,6 +5,7 @@
 #   Getestet mit Python 3.5
 
 import xml.etree.ElementTree as et
+from enum import Enum
 
 class XmlServiceInterface:
     def __init__(self, InterfaceNode):

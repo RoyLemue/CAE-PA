@@ -29,7 +29,7 @@ SECRET_KEY = 'h$vuab_bucj16xvy%fx*7lgssyqzqsh^#--s8)v7lf8$(piv6%'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -44,6 +44,9 @@ SITE_ID = 1
 PROJECT_APP_PATH = os.path.dirname(os.path.abspath(__file__))
 PROJECT_APP = os.path.basename(PROJECT_APP_PATH)
 PROJECT_ROOT = BASE_DIR = os.path.dirname(PROJECT_APP_PATH)
+
+RECIPE_DIR = os.path.join('recipe')#os.path.join(STATIC_ROOT, *['media', 'recipes'])
+TOPOLOGIE_DIR = os.path.join('topologie')
 
 # Every cache key will get prefixed with this value - here we set it to
 # the name of the directory the project is in to try and use something
