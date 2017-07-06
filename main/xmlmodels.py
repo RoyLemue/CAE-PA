@@ -59,7 +59,7 @@ class XmlServiceInstance:
 class XmlBlock(Enum):
     def __init__(self, Node, interface):
         self.name = Node.find('Name').text
-        if Node.find('Type').text == 'Serial':
+        if Node.find('Type').text == 'SeriellerBlock':
             self.type = BlockType.SERIAL
         else:
             self.type = BlockType.PARALLEL
@@ -81,6 +81,6 @@ class XmlParser:
     def __init__(self, xmlFile):
         tree = et.parse(xmlFile)
         root = tree.getroot() #ComosXmlExport Element
-        anlage = root.find('Anlage')
-        self.interface = XmlRecipeInterface(anlage.find('Schnittstelle'))
-        self.recipe = XmlRecipeInstance(anlage.find('Rezept'), self.interface)
+        anlage = root.find('plant')
+        self.interface = XmlRecipeInterface(anlage.find('interface'))
+        self.recipe = XmlRecipeInstance(anlage.find('recipe'), self.interface)

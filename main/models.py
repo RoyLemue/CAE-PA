@@ -50,32 +50,6 @@ class OpcMethod(Enum):
     ABORT = 8
     CLEAR = 9
 
-class RecipeState(Enum):
-    WAIT = 1
-    RUN = 2
-    FAILED = 3
-    ABORTED = 4
-    COMPLETED = 5
-
-class RecipeCommand(Enum):
-    START = 1
-    STOP = 2
-    PAUSE = 3
-
-
-class RecipeElementState(Enum):
-    WAITING = 1
-    RUNNING = 2
-    COMPLETED = 3
-    ABORTED = 4
-
-class RecipeType:
-    def __init__(self, start, running, complete):
-        self.start = start
-        self.running = running
-        self.complete = complete
-
-
 
 RUN_STATES = [OpcState.RUNNING,
                   OpcState.PAUSING,
@@ -111,19 +85,6 @@ NORMAL_STATES = [OpcState.RUNNING,
                  OpcState.STOPPED,
                  OpcState.CLEARING]
 
-#Allowed Starting States and Running States and the completing State
-RECIPE_COMMAND = {
-    OpcMethod.START : RecipeType([OpcState.IDLE], [OpcState.STARTING], [OpcState.RUNNING]),
-    OpcMethod.PAUSE : RecipeType([OpcState.RUNNING],[OpcState.PAUSING],[OpcState.PAUSED]),
-    OpcMethod.RESUME: RecipeType([OpcState.PAUSED],[OpcState.RESUMING],[OpcState.RUNNING]),
-    OpcMethod.HOLD: RecipeType(RUN_STATES,[OpcState.HOLDING],[OpcState.HELD]),
-    OpcMethod.UNHOLD: RecipeType([OpcState.HELD],[OpcState.UNHOLDING],[OpcState.RUNNING]),
-    OpcMethod.RESET: RecipeType([OpcState.COMPLETE, OpcState.STOPPED, OpcState.ABORTED],[OpcState.RESETTING],[OpcState.IDLE]),
-    OpcMethod.STOP: RecipeType(ACTIVE_STATES,[OpcState.STOPPING],[OpcState.STOPPED]),
-    OpcMethod.ABORT: RecipeType(NORMAL_STATES,[OpcState.ABORTING],[OpcState.ABORTED]),
-    OpcMethod.CLEAR: RecipeType([OpcState.ABORTED],[OpcState.CLEARING],[OpcState.STOPPED]),
-}
-
 STATE_MAP = {
     b'idle' : OpcState.IDLE,
     b'complete' : OpcState.COMPLETE,
@@ -137,19 +98,8 @@ STATE_MAP = {
     b'unholding': OpcState.UNHOLDING,
     b'stopping': OpcState.STOPPING,
     b'stopped': OpcState.STOPPED,
-}
-METHOD_MAP = {
-    'start' : OpcMethod.START,
-    'pause': OpcMethod.PAUSE,
-    'resume': OpcMethod.RESUME,
-    'hold': OpcMethod.HOLD,
-    'unhold': OpcMethod.UNHOLD,
-    'reset': OpcMethod.RESET,
-    'stop': OpcMethod.STOP,
-    'abort': OpcMethod.ABORT,
-    'clear': OpcMethod.CLEAR,
-}
 
+}
 class OpcClient(Client):
     """
     Default Client-> connects to a Server-Module with Services
@@ -214,6 +164,9 @@ class Topology:
         self.id = id
         self.fileName = filename
 
+class BlockType(Enum):
+    SERIAL = 1
+    PARALLEL = 2
 
 class RecipeHandler:
     def __init__(self):
