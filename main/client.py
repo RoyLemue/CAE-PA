@@ -9,10 +9,9 @@ import os, sys
 import subprocess
 import threading
 
-from main.models import *
+from main.settings import *
 
-PROJCET_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-BUILD_DIR = os.path.join(PROJCET_ROOT, 'build')
+BUILD_DIR = os.path.join(PROJECT_ROOT, 'build')
 
 
 
@@ -25,16 +24,14 @@ class OpcServerThread(threading.Thread):
         self.port = port
 
     def run(self):
-        subprocess.call([os.path.join(BUILD_DIR, "uamoduleserver_"+self.name), str(self.port), self.name])
+        subprocess.call([os.path.join(BUILD_DIR, "uamoduleserver_"+self.name.lower()), str(self.port), self.name])
 
 def main():
     # xmldata = XmlParser(os.path.join(PROJCET_ROOT, *['main', 'xml', 'example.xml']))
     # parse command line options
-    mixName = "mixer"
-    reactorName = "reactor"
-    mixerThread = OpcServerThread(sys.stdout, mixName, MIXER_PORT)
+    mixerThread = OpcServerThread(sys.stdout, MIXER['name'], MIXER['port'])
     mixerThread.start()
-    reactorThread = OpcServerThread(sys.stdout, reactorName, REACTOR_PORT)
+    reactorThread = OpcServerThread(sys.stdout, REACTOR['name'], REACTOR['port'])
     reactorThread.start()
     while True:
         time.sleep(1)

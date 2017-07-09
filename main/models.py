@@ -8,17 +8,9 @@
 from enum import Enum
 from opcua import Client, ua, Node
 import os
-from main.settings import *
+import main.settings
 
-from main.xmlmodels import XmlParser
-
-MIXER_NAME = "mixer"
-REACTOR_NAME = "reactor"
-
-MIXER_PORT = 4840
-REACTOR_PORT = 4842
-
-print("models")
+from main.xmlmodels import *
 
 class OpcState(Enum):
     IDLE = 4
@@ -38,18 +30,6 @@ class OpcState(Enum):
     ABORTING = 8
     ABORTED = 9
     CLEARING = 1
-
-class OpcMethod(Enum):
-    START = 2
-    PAUSE = 6
-    RESUME = 7
-    HOLD = 4
-    UNHOLD = 5
-    RESET = 1
-    STOP = 3
-    ABORT = 8
-    CLEAR = 9
-
 
 RUN_STATES = [OpcState.RUNNING,
                   OpcState.PAUSING,
@@ -85,6 +65,17 @@ NORMAL_STATES = [OpcState.RUNNING,
                  OpcState.STOPPED,
                  OpcState.CLEARING]
 
+class OpcMethod(Enum):
+    START = 2
+    PAUSE = 6
+    RESUME = 7
+    HOLD = 4
+    UNHOLD = 5
+    RESET = 1
+    STOP = 3
+    ABORT = 8
+    CLEAR = 9
+
 STATE_MAP = {
     b'idle' : OpcState.IDLE,
     b'complete' : OpcState.COMPLETE,
@@ -98,88 +89,18 @@ STATE_MAP = {
     b'unholding': OpcState.UNHOLDING,
     b'stopping': OpcState.STOPPING,
     b'stopped': OpcState.STOPPED,
-
 }
-class OpcClient(Client):
-    """
-    Default Client-> connects to a Server-Module with Services
-    """
-
-    def __init__(self, adress, type):
-        '''
-
-        :param adress: Server Adress
-        '''
-        super(OpcClient, self).__init__(adress)
-
-        self.connect()
-        self.root = self.get_root_node()
-        self.ServiceList = []  # list with opcServices
-        self.type = type
-        for service in self.root.get_child(["0:Objects","1:"+type,"1:ServiceList"]).get_children():
-            self.ServiceList.append(OpcService(service, self))
-    def getService(self, serviceName):
-        for s in self.ServiceList:
-            if s.name == serviceName:
-                return s
-        return None
-
-    def __del__(self):
-        self.disconnect()
-
-
-class StateChangeHandler(object):
-
-    """
-    Subscription Handler. To receive events from server for a subscription
-    data_change and event methods are called directly from receiving thread.
-    Do not do expensive, slow or network operation there. Create another
-    thread if you need to do such a thing
-    """
-    def __init__(self, service):
-        self.service = service
-
-    def datachange_notification(self, node, val, data):
-        self.service.setState(val)
-
-class RecipeElement:
-    def __init__(self, service, method):
-        self.service = service
-        self.methodName = method.lower()
-        self.type = RECIPE_COMMAND[METHOD_MAP[self.methodName]]
-        self.state = RecipeElementState.WAITING
-
-    def execute(self):
-        if self.service.State in self.type.start:
-            self.service.callMethod(self.methodName)
-
-class Recipe:
-    def __init__(self, filename):
-        self.id = id
-        self.filename = filename
-        self.parser = XmlParser(filename)
-
-class Topology:
-    def __init__(self, filename):
-        self.id = id
-        self.fileName = filename
-
-class BlockType(Enum):
-    SERIAL = 1
-    PARALLEL = 2
-
-class RecipeHandler:
-    def __init__(self):
-        recipes = []
-        self.recipeId = 0
-        for file in os.listdir(RECIPE_DIR):
-            recipes.append(Recipe(self.RecipeId,file))
-        self.topologyId = 0
-        topologies = []
-        for file in os.listdir(TOPOLOGIE_DIR):
-            topologies.append(Topologyfile))
-            self.topologyId += 1
-        self.actualTopology = topologies[0]
+METHOD_MAP = {
+    'start' : OpcMethod.START,
+    'pause': OpcMethod.PAUSE,
+    'resume': OpcMethod.RESUME,
+    'hold': OpcMethod.HOLD,
+    'unhold': OpcMethod.UNHOLD,
+    'reset': OpcMethod.RESET,
+    'stop': OpcMethod.STOP,
+    'abort': OpcMethod.ABORT,
+    'clear': OpcMethod.CLEAR,
+}
 
 class OpcService:
 
@@ -188,7 +109,6 @@ class OpcService:
         self.stateNode = self.node.get_child(["1:CurrentState"])
         self.client = client
         self.commands = node.get_child(["1:Commands"])
-        #TODO parse stateNode and subscribe currentState
 
         self.name = str(node.get_display_name().Text.decode("utf-8", "ignore"))
         self.stateMap = {}
@@ -247,3 +167,170 @@ class OpcService:
         test = ''
         if self.State in recipeType.start:
             self.commands.call_method("1:"+method)
+
+
+
+
+
+class OpcClient(Client):
+    """
+    Default Client-> connects to a Server-Module with Services
+    """
+
+    def __init__(self, adress, type):
+        '''
+
+        :param adress: Server Adress
+        '''
+        super(OpcClient, self).__init__(adress)
+
+        self.connect()
+        self.root = self.get_root_node()
+        self.ServiceList = []  # list with opcServices
+        self.type = type
+        for service in self.root.get_child(["0:Objects","1:"+type,"1:ServiceList"]).get_children():
+            self.ServiceList.append(OpcService(service, self))
+    def getService(self, serviceName):
+        for s in self.ServiceList:
+            if s.name == serviceName:
+                return s
+        return None
+
+    def __del__(self):
+        self.disconnect()
+
+class OpcPlant:
+    def __init__(self, nodes):
+        self.parts = {}
+        for node in nodes:
+            self.parts[node['name']] = OpcClient("opc.tcp://"+node['adress']+":" + node['port'], node['name'])
+
+class StateChangeHandler(object):
+
+    """
+    Subscription Handler. To receive events from server for a subscription
+    data_change and event methods are called directly from receiving thread.
+    Do not do expensive, slow or network operation there. Create another
+    thread if you need to do such a thing
+    """
+    def __init__(self, service):
+        self.service = service
+
+    def datachange_notification(self, node, val, data):
+        self.service.setState(val)
+
+
+class RecipeState(Enum):
+    WAIT = 1
+    RUN = 2
+    FAILED = 3
+    ABORTED = 4
+    COMPLETED = 5
+
+class RecipeCommand(Enum):
+    START = 1
+    STOP = 2
+    PAUSE = 3
+
+class RecipeElementState(Enum):
+    WAITING = 1
+    RUNNING = 2
+    COMPLETED = 3
+    ABORTED = 4
+
+class RecipeType:
+    def __init__(self, start, running, complete):
+        self.start = start
+        self.running = running
+        self.complete = complete
+
+
+
+#Allowed Starting States and Running States and the completing State
+RECIPE_COMMAND = {
+    OpcMethod.START : RecipeType([OpcState.IDLE], [OpcState.STARTING], [OpcState.RUNNING]),
+    OpcMethod.PAUSE : RecipeType([OpcState.RUNNING],[OpcState.PAUSING],[OpcState.PAUSED]),
+    OpcMethod.RESUME: RecipeType([OpcState.PAUSED],[OpcState.RESUMING],[OpcState.RUNNING]),
+    OpcMethod.HOLD: RecipeType(RUN_STATES,[OpcState.HOLDING],[OpcState.HELD]),
+    OpcMethod.UNHOLD: RecipeType([OpcState.HELD],[OpcState.UNHOLDING],[OpcState.RUNNING]),
+    OpcMethod.RESET: RecipeType([OpcState.COMPLETE, OpcState.STOPPED, OpcState.ABORTED],[OpcState.RESETTING],[OpcState.IDLE]),
+    OpcMethod.STOP: RecipeType(ACTIVE_STATES,[OpcState.STOPPING],[OpcState.STOPPED]),
+    OpcMethod.ABORT: RecipeType(NORMAL_STATES,[OpcState.ABORTING],[OpcState.ABORTED]),
+    OpcMethod.CLEAR: RecipeType([OpcState.ABORTED],[OpcState.CLEARING],[OpcState.STOPPED]),
+}
+
+class RecipeElement:
+    def __init__(self, service, method):
+        self.service = service
+        self.methodName = method.lower()
+        self.type = RECIPE_COMMAND[METHOD_MAP[self.methodName]]
+        self.state = RecipeElementState.WAITING
+
+    def execute(self):
+        if self.service.State in self.type.start:
+            self.service.callMethod(self.methodName)
+
+class Recipe:
+    def __init__(self, filename):
+        self.id = id
+        self.filename = filename
+        self.parser = XmlRecipeParser(filename)
+
+class Topology:
+    def __init__(self, filename):
+        self.id = id
+        self.fileName = filename
+        self.parser = XmlTopologyParser(filename)
+
+class BlockType(Enum):
+    SERIAL = 1
+    PARALLEL = 2
+
+class RecipeHandler:
+    def __init__(self, anlage):
+        self.recipes = []
+        self.recipeId = 0
+        self.anlage = anlage
+        for file in os.listdir(main.settings.RECIPE_DIR):
+            self.recipes.append(Recipe(os.path.join(main.settings.RECIPE_DIR,file)))
+        self.topologyId = 0
+        self.topologies = []
+        for file in os.listdir(main.settings.TOPOLOGY_DIR):
+            self.topologies.append(Topology(os.path.join(main.settings.TOPOLOGY_DIR,file)))
+            self.topologyId += 1
+        self.actualTopology = self.topologies[0]
+        self.actualRecipe = None
+        self.validTopology = self.checkTopology()
+
+    #check opcua services
+    def checkTopology(self):
+        for module in self.actualTopology.parser.interface.modules:
+            anlagenModul = self.anlage.parts[module.name]
+            for service in module.services:
+                opcService = anlagenModul.getService(service.opcName)
+                if not opcService:
+                    return False
+                else:
+                    print(anlagenModul.name+' '+opcService.name+' gefunden')
+        return True
+
+    def startRecipe(self, recipeIndex):
+        recipe = self.recipes[recipeIndex]
+        for index, topoModule in self.actualTopology.interface.modules:
+            recipeModule = recipe.interface.modules[index]
+            if topoModule.position != recipeModule.position:
+                return {'status' : False, 'message' : 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'}
+            for serviceIndex, topoService in topoModule.services:
+                if topoService.name != recipeModule.services[serviceIndex].name:
+                    return {'status': False,
+                            'message': 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'}
+                # TODO check parameter
+        # walk trough Tree and create RecipeElements
+
+    def __addRecipeElementOnChilds(self, node):
+        for child in node.childs:
+            if isinstance(child, XmlRecipeServiceInstance):
+                child.recipeElement = RecipeElement()
+
+
+

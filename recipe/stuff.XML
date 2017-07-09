@@ -1,6 +1,6 @@
 <ComosXmlExport>
-  <Anlage>
-    <Rezept label="C1" owner="C2">
+  <plant>
+    <recipe label="C1" owner="C2">
       <recipename>Testrezept</recipename>
       <service objectid="C3" ownerid="C4" name="Filter Conti parrallel">
         <parameter paramid="C5" paramownerid="C3" name="Parameter">
@@ -29,11 +29,12 @@
       <block objectid="C15" ownerid="C14" type="SeriellerBlock" />
       <block objectid="C16" ownerid="C15" type="SeriellerBlock" />
       <block objectid="C17" ownerid="C16" type="SeriellerBlock" />
-    </Rezept>
-    <Schnittstelle>
+    </recipe>
+    <interface>
       <Schnittstellenabfrage>OPC-UA-Schnittstelle</Schnittstellenabfrage>
       <Modulschnittstelle>
         <Modulschnittstellenabfrage>Filter</Modulschnittstellenabfrage>
+        <Position>1</Position>
         <OPC_UA_URL>
         </OPC_UA_URL>
         <OPC_UA_Name>Filter</OPC_UA_Name>
@@ -74,6 +75,7 @@
       </Modulschnittstelle>
       <Modulschnittstelle>
         <Modulschnittstellenabfrage>Mixer</Modulschnittstellenabfrage>
+        <Position>2</Position>
         <OPC_UA_URL>
         </OPC_UA_URL>
         <OPC_UA_Name>Mixer</OPC_UA_Name>
@@ -243,6 +245,7 @@
       </Modulschnittstelle>
       <Modulschnittstelle>
         <Modulschnittstellenabfrage>Reactor</Modulschnittstellenabfrage>
+        <Position>3</Position>
         <OPC_UA_URL>
         </OPC_UA_URL>
         <OPC_UA_Name>Reactor</OPC_UA_Name>
@@ -336,6 +339,7 @@
       </Modulschnittstelle>
       <Modulschnittstelle>
         <Modulschnittstellenabfrage>Bottling</Modulschnittstellenabfrage>
+        <Position>4</Position>
         <OPC_UA_URL>
         </OPC_UA_URL>
         <OPC_UA_Name>Bottling</OPC_UA_Name>
@@ -377,6 +381,6 @@
           <ServiceName>Empty</ServiceName>
         </Dienst>
       </Modulschnittstelle>
-    </Schnittstelle>
-  </Anlage>
+    </interface>
+  </plant>
 </ComosXmlExport>

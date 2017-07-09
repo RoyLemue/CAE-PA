@@ -45,8 +45,8 @@ PROJECT_APP_PATH = os.path.dirname(os.path.abspath(__file__))
 PROJECT_APP = os.path.basename(PROJECT_APP_PATH)
 PROJECT_ROOT = BASE_DIR = os.path.dirname(PROJECT_APP_PATH)
 
-RECIPE_DIR = os.path.join('recipe')#os.path.join(STATIC_ROOT, *['media', 'recipes'])
-TOPOLOGIE_DIR = os.path.join('topologie')
+RECIPE_DIR = os.path.join(PROJECT_ROOT, 'recipe')#os.path.join(STATIC_ROOT, *['media', 'recipes'])
+TOPOLOGY_DIR = os.path.join(PROJECT_ROOT, 'topologie')
 
 # Every cache key will get prefixed with this value - here we set it to
 # the name of the directory the project is in to try and use something
@@ -202,12 +202,9 @@ USE_L10N = True
 USE_TZ = True
 
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-# TODO create from XML ( Work from Group 3)
-TeilAnlage = {
-    "Mixer" : models.OpcClient("opc.tcp://localhost:"+str(models.MIXER_PORT), models.MIXER_NAME),
-    "Reactor" : models.OpcClient("opc.tcp://localhost:"+str(models.REACTOR_PORT), models.REACTOR_NAME)
-}
+
+MIXER = {'name': 'Mixer', 'adress': 'localhost', 'port': '4840'}
+REACTOR = {'name': 'Reactor', 'adress': 'localhost', 'port': '4842'}

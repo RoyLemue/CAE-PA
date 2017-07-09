@@ -7,31 +7,35 @@
 import xml.etree.ElementTree as et
 from enum import Enum
 
-class XmlServiceInterface:
+class XmlInterfaceService:
     def __init__(self, InterfaceNode):
         self.name = InterfaceNode.find('ServiceName').text
         self.opcName = InterfaceNode.find('OPC_UA_Methodenname').text
         self.continous = bool(InterfaceNode.find('Konti').text)
         self.parameters = {}
         for paramNode in InterfaceNode.findall('parameter'):
-            paramType = paramNode.find('type').text
-            paramName = paramNode.find('name').text
-            self.parameters[paramName] = paramType
+            # paramType = paramNode.find('type').text
+            paramType = ''
+            paramName = paramNode.find('parameterdesc').text
+            paramVal = paramNode.find('defaultvalue').text
 
-class XmlModulInterface:
+            self.parameters[paramName] = {'default': paramVal, 'type': paramType}
+
+class XmlInterfaceModul:
     def __init__(self, InterfaceNode):
         self.name = InterfaceNode.find('Modulschnittstellenabfrage').text
         self.opcName = InterfaceNode.find('OPC_UA_Name').text
+        self.position = int(InterfaceNode.find('Position').text)
         self.services = []
         for service in InterfaceNode.findall('Dienst'):
-            self.services.append(XmlServiceInterface(service))
+            self.services.append(XmlInterfaceService(service))
 
 class XmlRecipeInterface:
     def __init__(self, InterfaceNode):
         self.name = InterfaceNode.find("Schnittstellenabfrage").text
         self.modules = []
         for module in InterfaceNode.findall('Modulschnittstelle'):
-            self.modules.append(XmlModulInterface(module))
+            self.modules.append(XmlInterfaceModul(module))
 
     def getServiceInterface(self, ServiceName):
         for module in self.modules:
@@ -44,7 +48,7 @@ class BlockType(Enum):
     SERIAL = 1
     PARALLEL = 2
 
-class XmlServiceInstance:
+class XmlRecipeServiceInstance:
     def __init__(self, Node, interface):
         self.name = Node.find('Service').text
         self.type = interface.getServiceInterface(self.name)
@@ -56,7 +60,7 @@ class XmlServiceInstance:
                 'value': p.find('Value').text
             })
 
-class XmlBlock(Enum):
+class XmlRecipeBlock(Enum):
     def __init__(self, Node, interface):
         self.name = Node.find('Name').text
         if Node.find('Type').text == 'SeriellerBlock':
@@ -66,21 +70,29 @@ class XmlBlock(Enum):
         self.childs = []
         for child in Node.find('Childs'):
             if child.tag == 'Dienst':
-                self.childs.append(XmlServiceInstance(child, interface))
+                self.childs.append(XmlRecipeServiceInstance(child, interface))
             if child.tag == 'Block':
-                self.childs.append(XmlBlock(child, interface))
+                self.childs.append(XmlRecipeBlock(child, interface))
 
 class XmlRecipeInstance:
     def __init__(self, Node, interface):
-        self.name = Node.find('Rezeptname').text
-        self.RunBlock = XmlBlock(Node.find('RunBlock', interface))
-        self.StopBlock = XmlBlock(Node.find('StopBlock', interface))
+        self.name = Node.find('recipename').text
+        #self.RunBlock = XmlRecipeBlock(Node.find('RunBlock', interface))
+        #self.StopBlock = XmlRecipeBlock(Node.find('StopBlock', interface))
 
 
-class XmlParser:
+class XmlRecipeParser:
     def __init__(self, xmlFile):
         tree = et.parse(xmlFile)
         root = tree.getroot() #ComosXmlExport Element
         anlage = root.find('plant')
         self.interface = XmlRecipeInterface(anlage.find('interface'))
         self.recipe = XmlRecipeInstance(anlage.find('recipe'), self.interface)
+
+class XmlTopologyParser:
+    def __init__(self, xmlFile):
+        tree = et.parse(xmlFile)
+        root = tree.getroot() #ComosXmlExport Element
+        anlage = root.find('plant')
+        self.interface = XmlRecipeInterface(anlage.find('interface'))
+

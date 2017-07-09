@@ -18,7 +18,7 @@ from django.contrib import admin, auth
 import django.contrib.auth.views
 from django.conf.urls.static import static
 from django.conf import settings
-from . import views
+from . import views, models
 from django.core.urlresolvers import reverse_lazy
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -43,3 +43,7 @@ urlpatterns = [
 
 handler404 = "django.views.defaults.page_not_found"
 handler500 = "django.views.defaults.server_error"
+
+# global Objects
+TeilAnlage = models.OpcPlant([ settings.MIXER, settings.REACTOR])
+RecipeLoader = models.RecipeHandler(TeilAnlage)
