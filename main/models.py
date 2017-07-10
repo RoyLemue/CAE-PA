@@ -295,12 +295,15 @@ class RecipeHandler:
         return getattr(self.instance, name)
 
     class __RecipeHandler:
+
+        def parseRecipe (self,filename):
+           self.recipes.append(Recipe(os.path.join(main.settings.RECIPE_DIR,filename)))
         def __init__(self, anlage):
             self.recipes = []
             self.recipeId = 0
             self.anlage = anlage
-            for file in os.listdir(main.settings.RECIPE_DIR):
-                self.recipes.append(Recipe(os.path.join(main.settings.RECIPE_DIR,file)))
+          #  for file in os.listdir(main.settings.RECIPE_DIR):
+          #      self.recipes.append(Recipe(os.path.join(main.settings.RECIPE_DIR,file)))
             self.topologyId = 0
             self.topologies = []
             for file in os.listdir(main.settings.TOPOLOGY_DIR):
