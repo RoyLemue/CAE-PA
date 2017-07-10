@@ -6,6 +6,7 @@
 
 import xml.etree.ElementTree as et
 from enum import Enum
+import re as regex
 
 def sortNode(x, y):
        if x.id < y.id:
@@ -63,9 +64,11 @@ class XmlRecipeBlock():
       #  print (nodeList.keys())
         for node in nodeList.values():
             if str(node.attrib['ParentRE']) == self.id:
-                blockType = node.attrib['TypeRE']
-                if blockType == 'ParallelerBlock' or blockType == 'SeriellerBlock':
-                   #  print ('block' +str(node.attrib['RE_ID']) + 'parent ' + str(node.attrib['ParentRE']))
+                blockTypeString = node.attrib['type']
+                blockType = regex.split('\!|\|', blockTypeString)[-1:]
+
+                if blockType[0] == 'ParallelerBlock' or blockType[0] == 'SeriellerBlock':
+                     print ('block' +str(node.attrib['RE_ID']) + 'parent ' + str(node.attrib['ParentRE']))
                      child = XmlRecipeBlock(node, interface, nodeList,serviceList)
 
                 else:
@@ -85,10 +88,10 @@ class XmlRecipeServiceInstance:
 
         for node in serviceList.values():
            if node.attrib['RE_ID'] == self.id:
-           #    print(Node.attrib['RE_ID'])
+               print(node.attrib['NameRE'])
                self.method = node.find('method').text
                self.serviceID = node.find('serviceID').text
-              # print (self.method)
+               print (self.method)
              #  print (self.serviceID)
 
 
