@@ -12,12 +12,12 @@ from django.http import JsonResponse, HttpResponse
 #from .forms import *
 from .models import *
 from .settings import *
+from .urls import *
 import os
 import logging
 logger = logging.getLogger('django')
 
 print("views")
-
 @login_required
 def jsonMethodCall(request):
     module = request.post.get("modul")
@@ -75,9 +75,9 @@ def home(request):
         recipes.append(file)
 
     topologies = []
-    for file in os.listdir(TOPOLOGIE_DIR):
+    for file in os.listdir(TOPOLOGY_DIR):
             topologies.append(file)
-
+    TeilAnlage = RecipeHandler.instance.anlage
     return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes, 'Topologies' : topologies })
 
 def uploadRecipes(request):
@@ -109,7 +109,7 @@ def uploadStructure(request):
             recipes.append(file)
 
         topologies = []
-        for file in os.listdir(TOPOLOGIE_DIR):
+        for file in os.listdir(TOPOLOGY_DIR):
             topologies.append(file)
 
     return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes, "Topologies" : topologies})

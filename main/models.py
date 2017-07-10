@@ -287,50 +287,58 @@ class BlockType(Enum):
     PARALLEL = 2
 
 class RecipeHandler:
+    instance = None
     def __init__(self, anlage):
-        self.recipes = []
-        self.recipeId = 0
-        self.anlage = anlage
-        for file in os.listdir(main.settings.RECIPE_DIR):
-            self.recipes.append(Recipe(os.path.join(main.settings.RECIPE_DIR,file)))
-        self.topologyId = 0
-        self.topologies = []
-        for file in os.listdir(main.settings.TOPOLOGY_DIR):
-            self.topologies.append(Topology(os.path.join(main.settings.TOPOLOGY_DIR,file)))
-            self.topologyId += 1
-        self.actualTopology = self.topologies[0]
-        self.actualRecipe = None
-        self.validTopology = self.checkTopology()
+        if not RecipeHandler.instance:
+            RecipeHandler.instance = RecipeHandler.__RecipeHandler(anlage)
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
 
-    #check opcua services
-    def checkTopology(self):
-        for module in self.actualTopology.parser.interface.modules:
-            anlagenModul = self.anlage.parts[module.name]
-            for service in module.services:
-                opcService = anlagenModul.getService(service.opcName)
-                if not opcService:
-                    return False
-                else:
-                    print(anlagenModul.name+' '+opcService.name+' gefunden')
-        return True
+    class __RecipeHandler:
+        def __init__(self, anlage):
+            self.recipes = []
+            self.recipeId = 0
+            self.anlage = anlage
+            for file in os.listdir(main.settings.RECIPE_DIR):
+                self.recipes.append(Recipe(os.path.join(main.settings.RECIPE_DIR,file)))
+            self.topologyId = 0
+            self.topologies = []
+            for file in os.listdir(main.settings.TOPOLOGY_DIR):
+                self.topologies.append(Topology(os.path.join(main.settings.TOPOLOGY_DIR,file)))
+                self.topologyId += 1
+            self.actualTopology = self.topologies[0]
+            self.actualRecipe = None
+            self.validTopology = self.checkTopology()
 
-    def startRecipe(self, recipeIndex):
-        recipe = self.recipes[recipeIndex]
-        for index, topoModule in self.actualTopology.interface.modules:
-            recipeModule = recipe.interface.modules[index]
-            if topoModule.position != recipeModule.position:
-                return {'status' : False, 'message' : 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'}
-            for serviceIndex, topoService in topoModule.services:
-                if topoService.name != recipeModule.services[serviceIndex].name:
-                    return {'status': False,
-                            'message': 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'}
-                # TODO check parameter
-        # walk trough Tree and create RecipeElements
+        #check opcua services
+        def checkTopology(self):
+            for module in self.actualTopology.parser.interface.modules:
+                anlagenModul = self.anlage.parts[module.name]
+                for service in module.services:
+                    opcService = anlagenModul.getService(service.opcName)
+                    if not opcService:
+                        return False
+                    else:
+                        print(anlagenModul.name+' '+opcService.name+' gefunden')
+            return True
 
-    def __addRecipeElementOnChilds(self, node):
-        for child in node.childs:
-            if isinstance(child, XmlRecipeServiceInstance):
-                child.recipeElement = RecipeElement()
+        def startRecipe(self, recipeIndex):
+            recipe = self.recipes[recipeIndex]
+            for index, topoModule in self.actualTopology.interface.modules:
+                recipeModule = recipe.interface.modules[index]
+                if topoModule.position != recipeModule.position:
+                    return {'status' : False, 'message' : 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'}
+                for serviceIndex, topoService in topoModule.services:
+                    if topoService.name != recipeModule.services[serviceIndex].name:
+                        return {'status': False,
+                                'message': 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'}
+                    # TODO check parameter
+            # walk trough Tree and create RecipeElements
+
+        def __addRecipeElementOnChilds(self, node):
+            for child in node.childs:
+                if isinstance(child, XmlRecipeServiceInstance):
+                    child.recipeElement = RecipeElement()
 
 
 
