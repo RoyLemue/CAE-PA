@@ -163,7 +163,9 @@ def handle_uploaded_structure(file, filename):
         for chunk in file.chunks():
             destination.write(chunk)
 
-
+def startParsing(request, recipeName):
+    RecipeHandler.instance.parseRecipe(recipeName)
+    return JsonResponse({'status' : 'OK',})
 
 
 

@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-from . import models
+#from . import models
+import main.models
 
 ########################
 # MAIN DJANGO SETTINGS #
