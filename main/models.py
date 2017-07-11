@@ -341,6 +341,23 @@ class RecipeHandler:
                         print(anlagenModul.name+' '+opcService.name+' gefunden')
             return True
 
+        def startRecipeWithFilename(self, filename):
+            recipe = Recipe(os.path.join(main.settings.RECIPE_DIR, filename))
+            services = self.getServices(recipe.parser.recipe.RunBlock)
+            recipeElements = []
+            for service in services:
+                service.serviceID
+                #RecipeElementThread(sys.stdout, fillService, 'start'),
+
+        def getServices(self, recipeNode):
+            services = []
+            for child in self.childs:
+                if isinstance(child, XmlRecipeBlock):
+                    services.append(self.getServices(child))
+                elif isinstance(child, XmlRecipeServiceInstance):
+                    services.append(child)
+            return services
+
         def startRecipe(self, recipeIndex):
             recipe = self.recipes[recipeIndex]
             for index, topoModule in self.actualTopology.interface.modules:

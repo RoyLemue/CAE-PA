@@ -28,15 +28,6 @@ def jsonMethodCall(request):
     return JsonResponse({'status' : 'OK'})
 
 @login_required
-def recipeStart(request, recipeName):
-    module = request.post.get("modul")
-    service = request.post.get("service")
-    method = request.post.get("method")
-    parser = XmlParser(recipeName)
-    recipeHandler.start(parser.tree)
-    return JsonResponse({'status' : 'OK'})
-
-@login_required
 def recipePause(request, recipeName):
     module = request.post.get("modul")
     service = request.post.get("service")
@@ -69,14 +60,14 @@ def getJsonInformation(request):
     dispenseService = TeilAnlage.parts['Mixer'].getService('dispense')
 
     recipeQueue = [
-        models.RecipeElementThread(sys.stdout, fillService, 'start'),
-        models.RecipeElementThread(sys.stdout, doseService, 'start'),
-        models.RecipeElementThread(sys.stdout, fillService, 'reset'),
-        models.RecipeElementThread(sys.stdout, doseService, 'stop'),  # has to be stopped before dispense
-        models.RecipeElementThread(sys.stdout, doseService, 'reset'),
-        models.RecipeElementThread(sys.stdout, dispenseService, 'start'),
-        models.RecipeElementThread(sys.stdout, dispenseService, 'reset'),
-        models.RecipeElementThread(sys.stdout, doseService, 'reset'),
+        RecipeElementThread(sys.stdout, fillService, 'start'),
+        RecipeElementThread(sys.stdout, doseService, 'start'),
+        RecipeElementThread(sys.stdout, fillService, 'reset'),
+        RecipeElementThread(sys.stdout, doseService, 'stop'),  # has to be stopped before dispense
+        RecipeElementThread(sys.stdout, doseService, 'reset'),
+        RecipeElementThread(sys.stdout, dispenseService, 'start'),
+        RecipeElementThread(sys.stdout, dispenseService, 'reset'),
+        RecipeElementThread(sys.stdout, doseService, 'reset'),
     ]
     encoder =JsonDataEncoder()
     jsonData = encoder.encode({'status': 'OK',
@@ -150,10 +141,24 @@ def showExample(request):
     topologies = []
     for file in os.listdir(TOPOLOGY_DIR):
             topologies.append(file)
+
     TeilAnlage = RecipeHandler.instance.anlage
 
+    fillService = TeilAnlage.parts['Mixer'].getService('fill')
+    doseService = TeilAnlage.parts['Mixer'].getService('dose')
+    dispenseService = TeilAnlage.parts['Mixer'].getService('dispense')
+    recipeQueue = [
+        RecipeElementThread(sys.stdout, fillService, 'start'),
+        RecipeElementThread(sys.stdout, doseService, 'start'),
+        RecipeElementThread(sys.stdout, fillService, 'reset'),
+        RecipeElementThread(sys.stdout, doseService, 'stop'),  # has to be stopped before dispense
+        RecipeElementThread(sys.stdout, doseService, 'reset'),
+        RecipeElementThread(sys.stdout, dispenseService, 'start'),
+        RecipeElementThread(sys.stdout, dispenseService, 'reset'),
+        RecipeElementThread(sys.stdout, doseService, 'reset'),
+    ]
     RecipeHandler.instance.startRecipeWithQueue(recipeQueue)
-    return TemplateResponse(request, 'Home.html', {"Teilanlage": TeilAnlage, "Recipes": recipes})
+    return TemplateResponse(request, 'Example.html', {"Teilanlage": TeilAnlage, "Recipes": recipes})
 
 def handle_uploaded_structure(file, filename):
     if not os.path.exists('topologie/'):
@@ -163,7 +168,12 @@ def handle_uploaded_structure(file, filename):
         for chunk in file.chunks():
             destination.write(chunk)
 
-def startParsing(request, recipeName):
+@login_required
+def recipeStart(request, recipeName):
+    RecipeHandler.instance.startRecipeWithFilename(recipeName)
+    return JsonResponse({'status' : 'OK'})
+
+def recipeParse(request, recipeName):
     RecipeHandler.instance.parseRecipe(recipeName)
     return JsonResponse({'status' : 'OK',})
 

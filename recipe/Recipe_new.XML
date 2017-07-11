@@ -1,0 +1,65 @@
+<ComosXmlExport>
+  <plant>
+    <recipe label="C26" owner="C2">
+      <recipename>OPC-UA</recipename>
+      <runblock objectid="RunBlock" name="RunBlock">
+        <Block objectid="C27" ownerid="C28" type="SeriellerBlock">
+			<ServiceCall objectid="C29" ownerid="C27" name="Mixer_dispense">
+				<LinkedOPCID>m1_s1</LinkedOPCID>
+			</ServiceCall>
+			<ServiceCall objectid="C30" ownerid="C27" name="Reactor_fill" />
+				<LinkedOPCID>m2_s2</LinkedOPCID>
+			</ServiceCall>
+			<Block objectid="C31" ownerid="C27" type="ParallelerBlock">
+				<ServiceCall objectid="C32" ownerid="C31" name="Mixer_dose" />
+					<LinkedOPCID>m1_s2</LinkedOPCID>
+				</ServiceCall>
+				<ServiceCall objectid="C33" ownerid="C31" name="Reactor_temp" />
+					<LinkedOPCID>m2_s3</LinkedOPCID>
+				</ServiceCall>
+			</Block>
+		</Block>
+      </runblock>
+      <stopblock objectid="StopBlock" name="StopBlock" />
+    </recipe>
+    <interface>
+      <Schnittstellenabfrage>OPC-UA</Schnittstellenabfrage>
+	  <Position>1</Position>
+      <Modulschnittstelle>
+        <Modulschnittstellenabfrage>Mixer</Modulschnittstellenabfrage>
+        <OPC_UA_URL>https://localhost:1234</OPC_UA_URL>
+        <OPC_UA_Name>Mixer</OPC_UA_Name>
+		<Service>
+			<OPCUAMethodName>dispense</OPCUAMethodName>
+			<OPCUAID>m1_s1</OPCUAID>
+		</Service>
+		<Service>
+			<OPCUAMethodName>dose</OPCUAMethodName>
+			<OPCUAID>m1_s2</OPCUAID>
+		</Service>
+		<Service>
+			<OPCUAMethodName>fill</OPCUAMethodName>
+			<OPCUAID>m1_s3</OPCUAID>
+		</Service>
+      </Modulschnittstelle>
+      <Modulschnittstelle>
+        <Modulschnittstellenabfrage>Reactor</Modulschnittstellenabfrage>
+		  <Position>2</Position>
+        <OPC_UA_URL>https://localhost:1235</OPC_UA_URL>
+        <OPC_UA_Name>Reactor</OPC_UA_Name>
+		<Service>
+			<OPCUAMethodName>cstr</OPCUAMethodName>
+			<OPCUAID>m2_s1</OPCUAID>
+		</Service>
+		<Service>
+			<OPCUAMethodName>fill</OPCUAMethodName>
+			<OPCUAID>m2_s2</OPCUAID>
+		</Service>
+		<Service>
+			<OPCUAMethodName>temp</OPCUAMethodName>
+			<OPCUAID>m2_s3</OPCUAID>
+		</Service>
+      </Modulschnittstelle>
+    </interface>
+  </Anlage>
+</ComosXmlExport>

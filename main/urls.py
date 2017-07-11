@@ -34,9 +34,8 @@ urlpatterns = [
 
     url(r'^example/', views.showExample, name="Home View"),
     url(r'^json/', views.getJsonInformation, name="JsonData"),
-    url(r'^recipe/(?P<recipeName>[\w.]{0,256})/parse/$', views.startParsing, name = "Home View"),
-
-    url(r'^recipe/start/(?P<recipeName>[\w-]+)/$', views.recipeStart, name="JSON Start Recipe"),
+    url(r'^recipe/parse/(?P<recipeName>[\w.]{0,256})/$', views.recipeParse, name = "Parse Recipe"),
+    url(r'^recipe/start/(?P<recipeName>[\w.]{0,256})/$', views.recipeStart, name="JSON Start Recipe"),
     url(r'^recipe/pause/(?P<recipeName>[\w-]+)/$', views.recipePause, name="JSON Pause Recipe"),
     url(r'^recipe/stop/(?P<recipeName>[\w-]+)/$', views.recipeStop, name="JSON stop Recipe"),
     #url(static(settings.STATIC_URL, serve=True)),
