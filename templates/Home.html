@@ -8,7 +8,7 @@
     var mokaModuleNode = $(".MokaModule").first();
     var module;
     var service, serviceNode;
-    {% for name, module in Teilanlage.items %}
+    {% for name, module in Teilanlage.parts.items %}
         module = new MokaModule(mokaModuleNode, '{{name}}' )
         moduleList.push(module);
         serviceNode = mokaModuleNode.children("table").children("tbody").children().first();
@@ -27,7 +27,7 @@
         });
     }
     //updateMethods();
-    setInterval(updateMethods , 5000);
+    setInterval(updateMethods , 500);
 
 {% endblock %}
 

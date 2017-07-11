@@ -19,6 +19,7 @@ import django.contrib.auth.views
 from django.conf.urls.static import static
 from django.conf import settings
 from . import views, models
+import sys
 from django.core.urlresolvers import reverse_lazy
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -30,7 +31,8 @@ urlpatterns = [
     url(r'^module/(?P<moduleName>[\w-]+)/call/(?P<serviceName>[\w]+)/(?P<methodName>[\w]+)/$', views.methodCall, name="Home View"),
     url(r'^uploadRecipe/', views.uploadRecipes, name="Home View"),
     url(r'^uploadTopologie/', views.uploadStructure, name="Home View"),
-
+    url(r'^example/', views.showExample, name="Home View"),
+    url(r'^json/', views.getJsonInformation, name="JsonData"),
 
     url(r'^recipe/start/(?P<recipeName>[\w-]+)/$', views.recipeStart, name="JSON Start Recipe"),
     url(r'^recipe/pause/(?P<recipeName>[\w-]+)/$', views.recipePause, name="JSON Pause Recipe"),
@@ -47,3 +49,4 @@ handler500 = "django.views.defaults.server_error"
 # global Objects
 TeilAnlage = models.OpcPlant([ settings.MIXER, settings.REACTOR])
 RecipeLoader = models.RecipeHandler(TeilAnlage)
+

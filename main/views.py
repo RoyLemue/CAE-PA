@@ -13,8 +13,10 @@ from django.http import JsonResponse, HttpResponse
 from .models import *
 from .settings import *
 from .urls import *
-import os
+from .jsonencoders import JsonDataEncoder
+import os, json
 import logging
+
 logger = logging.getLogger('django')
 
 print("views")
@@ -48,21 +50,48 @@ def recipeStop(request, recipeName):
     service = request.post.get("service")
     method = request.post.get("method")
     TeilAnlage
-    return JsonResponse({'status' : 'OK'})
+    return JsonResponse({'status' : 'OK'}, encoder=JsonDataEncoder)
 
 @login_required
 def getState(request, moduleName, serviceName):
-    service = TeilAnlage[moduleName].getService(serviceName)
+    TeilAnlage = RecipeHandler.instance.anlage
+    service = TeilAnlage.parts[moduleName].getService(serviceName)
     stringMethods = []
     for m in service.Methods:
         stringMethods.append(str(m).split('.')[1])
     return JsonResponse({'status' : 'OK', 'state' : str(service.State).split('.')[1], 'methods' : stringMethods})
 
+def getJsonInformation(request):
+    TeilAnlage = RecipeHandler.instance.anlage
+
+    fillService = TeilAnlage.parts['Mixer'].getService('fill')
+    doseService = TeilAnlage.parts['Mixer'].getService('dose')
+    dispenseService = TeilAnlage.parts['Mixer'].getService('dispense')
+
+    recipeQueue = [
+        models.RecipeElementThread(sys.stdout, fillService, 'start'),
+        models.RecipeElementThread(sys.stdout, doseService, 'start'),
+        models.RecipeElementThread(sys.stdout, fillService, 'reset'),
+        models.RecipeElementThread(sys.stdout, doseService, 'stop'),  # has to be stopped before dispense
+        models.RecipeElementThread(sys.stdout, doseService, 'reset'),
+        models.RecipeElementThread(sys.stdout, dispenseService, 'start'),
+        models.RecipeElementThread(sys.stdout, dispenseService, 'reset'),
+        models.RecipeElementThread(sys.stdout, doseService, 'reset'),
+    ]
+    encoder =JsonDataEncoder()
+    jsonData = encoder.encode({'status': 'OK',
+            'anlage': TeilAnlage.parts,
+            'recipe': recipeQueue,
+            'topology':RecipeHandler.instance.actualTopology})
+
+    return JsonResponse(jsonData)
+
 @login_required
 def methodCall(request, moduleName, serviceName, methodName):
+    TeilAnlage = RecipeHandler.instance.anlage
     methodName = methodName.lower()
     if methodName in METHOD_MAP.keys():
-        service = TeilAnlage[moduleName].getService(serviceName)
+        service = TeilAnlage.parts[moduleName].getService(serviceName)
         service.callMethod(methodName)
         state = service.State
         return JsonResponse({'status' : 'OK', 'state' : str(state).split('.')[1]})
@@ -90,8 +119,6 @@ def uploadRecipes(request):
 
     return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes})
 
-    return HttpResponse("Failed")
-
 def handle_uploaded_recipe(file, filename):
     if not os.path.exists('recipe/'):
         os.mkdir('recipe/')
@@ -114,7 +141,19 @@ def uploadStructure(request):
 
     return TemplateResponse(request, 'Home.html', {"Teilanlage" : TeilAnlage, "Recipes" : recipes, "Topologies" : topologies})
 
-    return HttpResponse("Failed")
+def showExample(request):
+
+    recipes = []
+    for file in os.listdir(RECIPE_DIR):
+        recipes.append(file)
+
+    topologies = []
+    for file in os.listdir(TOPOLOGY_DIR):
+            topologies.append(file)
+    TeilAnlage = RecipeHandler.instance.anlage
+
+    RecipeHandler.instance.startRecipeWithQueue(recipeQueue)
+    return TemplateResponse(request, 'Home.html', {"Teilanlage": TeilAnlage, "Recipes": recipes})
 
 def handle_uploaded_structure(file, filename):
     if not os.path.exists('topologie/'):

@@ -15,7 +15,7 @@
         </Dienst>
         <Dienst>
           <OPC_UA_Methodenname>dose</OPC_UA_Methodenname>
-          <Konti>0</Konti>
+          <Konti>1</Konti>
           <ServiceName>dose</ServiceName>
         </Dienst>
         <Dienst>
@@ -37,7 +37,7 @@
         </Dienst>
         <Dienst>
           <OPC_UA_Methodenname>fill</OPC_UA_Methodenname>
-          <Konti>0</Konti>
+          <Konti>1</Konti>
           <ServiceName>fill</ServiceName>
         </Dienst>
         <Dienst>

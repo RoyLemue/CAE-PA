@@ -11,11 +11,11 @@ class XmlInterfaceService:
     def __init__(self, InterfaceNode):
         self.name = InterfaceNode.find('ServiceName').text
         self.opcName = InterfaceNode.find('OPC_UA_Methodenname').text
-        self.continous = bool(InterfaceNode.find('Konti').text)
+        self.continous = int(InterfaceNode.find('Konti').text)
         self.parameters = {}
         for paramNode in InterfaceNode.findall('parameter'):
             # paramType = paramNode.find('type').text
-            paramType = ''
+            paramType = 'not set'
             paramName = paramNode.find('parameterdesc').text
             paramVal = paramNode.find('defaultvalue').text
 
@@ -26,16 +26,18 @@ class XmlInterfaceModul:
         self.name = InterfaceNode.find('Modulschnittstellenabfrage').text
         self.opcName = InterfaceNode.find('OPC_UA_Name').text
         self.position = int(InterfaceNode.find('Position').text)
-        self.services = []
+        self.services = {}
         for service in InterfaceNode.findall('Dienst'):
-            self.services.append(XmlInterfaceService(service))
+            xmlService = XmlInterfaceService(service)
+            self.services[xmlService.opcName] = xmlService
 
 class XmlRecipeInterface:
     def __init__(self, InterfaceNode):
         self.name = InterfaceNode.find("Schnittstellenabfrage").text
-        self.modules = []
+        self.modules = {}
         for module in InterfaceNode.findall('Modulschnittstelle'):
-            self.modules.append(XmlInterfaceModul(module))
+            xmlModule = XmlInterfaceModul(module)
+            self.modules[xmlModule.opcName] = xmlModule
 
     def getServiceInterface(self, ServiceName):
         for module in self.modules:

@@ -7,10 +7,11 @@
 
 from enum import Enum
 from opcua import Client, ua, Node
-import os
+import os, sys, time, json
 import main.settings
 
 from main.xmlmodels import *
+import threading
 
 class OpcState(Enum):
     IDLE = 4
@@ -116,7 +117,7 @@ class OpcService:
             self.stateMap[state.nodeid] = STATE_MAP[state.get_display_name().Text]
 
         self.StateHandler = StateChangeHandler(self)
-        self.sub = client.create_subscription(500, self.StateHandler)
+        self.sub = client.create_subscription(200, self.StateHandler)
         self.handle = self.sub.subscribe_data_change(self.stateNode)
 
 
@@ -125,7 +126,6 @@ class OpcService:
         self.parameters = {}
         for p in self.parameterNode.get_children():
             self.parameters[p.get_display_name()] = p
-
 
     def setParam(self, name, value):
         self.parameters[name].set_value(value)
@@ -164,13 +164,9 @@ class OpcService:
     def callMethod(self, method):
         methodName = method.lower()
         recipeType = RECIPE_COMMAND[METHOD_MAP[methodName]]
-        test = ''
         if self.State in recipeType.start:
+            # call from opcua node
             self.commands.call_method("1:"+method)
-
-
-
-
 
 class OpcClient(Client):
     """
@@ -238,12 +234,12 @@ class RecipeElementState(Enum):
     COMPLETED = 3
     ABORTED = 4
 
+
 class RecipeType:
     def __init__(self, start, running, complete):
         self.start = start
         self.running = running
         self.complete = complete
-
 
 
 #Allowed Starting States and Running States and the completing State
@@ -259,32 +255,32 @@ RECIPE_COMMAND = {
     OpcMethod.CLEAR: RecipeType([OpcState.ABORTED],[OpcState.CLEARING],[OpcState.STOPPED]),
 }
 
-class RecipeElement:
-    def __init__(self, service, method):
+class RecipeElementThread(threading.Thread):
+    def __init__(self,stdout, service, method):
+        threading.Thread.__init__(self)
+        self.stdout = stdout
+        self.stderr = None
         self.service = service
         self.methodName = method.lower()
         self.type = RECIPE_COMMAND[METHOD_MAP[self.methodName]]
         self.state = RecipeElementState.WAITING
+        self.timeout = 10.0
 
-    def execute(self):
-        if self.service.State in self.type.start:
-            self.service.callMethod(self.methodName)
+    def run(self):
+        self.state = RecipeElementState.RUNNING
+        self.service.callMethod(self.methodName)
+        while self.service.State not in self.type.complete:
+            pass
 
 class Recipe:
     def __init__(self, filename):
-        self.id = id
-        self.filename = filename
+        self.fileName = filename
         self.parser = XmlRecipeParser(filename)
 
 class Topology:
     def __init__(self, filename):
-        self.id = id
         self.fileName = filename
         self.parser = XmlTopologyParser(filename)
-
-class BlockType(Enum):
-    SERIAL = 1
-    PARALLEL = 2
 
 class RecipeHandler:
     instance = None
@@ -293,6 +289,26 @@ class RecipeHandler:
             RecipeHandler.instance = RecipeHandler.__RecipeHandler(anlage)
     def __getattr__(self, name):
         return getattr(self.instance, name)
+
+    class __RecipeQueueThread(threading.Thread):
+        def __init__(self, stdout, recipeQueue):
+            threading.Thread.__init__(self)
+            self.stdout = stdout
+            self.stderr = None
+            self.recipeQueue = recipeQueue
+        def run(self):
+            for re in self.recipeQueue:
+                startTime = time.clock()
+                elapsedTime = 0
+                re.start()
+                re.join(timeout = re.timeout)
+                while re.isAlive():
+                    pass
+
+                if re.service.State in re.type.complete:
+                    self.state = RecipeElementState.COMPLETED
+                else:
+                    self.state = RecipeElementState.ABORTED
 
     class __RecipeHandler:
         def __init__(self, anlage):
@@ -312,9 +328,9 @@ class RecipeHandler:
 
         #check opcua services
         def checkTopology(self):
-            for module in self.actualTopology.parser.interface.modules:
+            for module in self.actualTopology.parser.interface.modules.values():
                 anlagenModul = self.anlage.parts[module.name]
-                for service in module.services:
+                for service in module.services.values():
                     opcService = anlagenModul.getService(service.opcName)
                     if not opcService:
                         return False
@@ -334,11 +350,16 @@ class RecipeHandler:
                                 'message': 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'}
                     # TODO check parameter
             # walk trough Tree and create RecipeElements
+        def startRecipeWithQueue(self, recipeElements):
+            for re in recipeElements:
+                topoService = self.actualTopology.parser.interface.modules[re.service.client.type].services[re.service.name]
+                if topoService.continous == False and OpcState.IDLE in re.type.start:
+                    re.type = RecipeType([OpcState.IDLE], [OpcState.STARTING, OpcState.RUNNING, OpcState.PAUSING, OpcState.PAUSED], [OpcState.COMPLETE])
+
+            thread = RecipeHandler.__RecipeQueueThread(sys.stdout, recipeElements)
+            thread.start()
 
         def __addRecipeElementOnChilds(self, node):
             for child in node.childs:
                 if isinstance(child, XmlRecipeServiceInstance):
-                    child.recipeElement = RecipeElement()
-
-
-
+                    child.recipeElement = RecipeElementThread()
