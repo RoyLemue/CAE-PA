@@ -1,0 +1,80 @@
+<ComosXmlExport>
+  <plant RE_ID="C1" ParentRE="C2">
+   
+    <interface RE_ID="C49" ParentID="C1" name="OPC-UA">
+      <module RE_ID="C50" ParentID="C49" Type="Mixer" />
+      <module RE_ID="C51" ParentID="C49" Type="Reactor" />
+      <opcservice RE_ID="C52" ParentID="C50" name="dispense">
+        <opcName>dispense</opcName>
+        <opcID>m1_s1</opcID>
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C53" ParentID="C51" name="cstr">
+        <opcName>cstr</opcName>
+        <opcID>m2_s1</opcID>
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C54" ParentID="C50" name="dose">
+        <opcName>dose</opcName>
+        <opcID>m1_s2</opcID>
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C55" ParentID="C51" name="fill">
+        <opcName>fill</opcName>
+        <opcID>m2_s2</opcID>
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C56" ParentID="C51" name="temp">
+        <opcName>temp</opcName>
+        <opcID>m2_s3</opcID>
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C57" ParentID="C50" name="fill">
+        <opcName>fill</opcName>
+        <opcID>m1_s3</opcID>
+        <contiType>0</contiType>
+      </opcservice>
+    </interface>
+   
+    <recipe RE_ID="C82" ParentRE="C1" name="OPC-UA">
+      <creationDate>08.07.2017</creationDate>
+      <author>S2620384</author>
+      <runblock RE_ID="C83" ParentRE="C82">
+        <recipestep name="0" type="RunBlock!SeriellerBlock" ParentRE="C83" TypeRE="SeriellerBlock" RE_ID="C84" />
+        <recipestep name="1" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C84" TypeRE="Dienstaufruf" RE_ID="C85" />
+        <recipestep name="2" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C84" TypeRE="Mixer_dispense" RE_ID="C86" />
+        <recipestep name="3" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C84" TypeRE="Reactor_fill" RE_ID="C87" />
+        <recipestep name="4" type="Rezeptschritt|SeriellerBlock!ParallelerBlock" ParentRE="C84" TypeRE="ParallelerBlock" RE_ID="C88" />
+        <recipestep name="5" type="Rezeptschritt|Dienstaufruf" ParentRE="C88" TypeRE="Mixer_dose" RE_ID="C89" />
+        <recipestep name="6" type="Rezeptschritt|Dienstaufruf" ParentRE="C88" TypeRE="Reactor_temp" RE_ID="C90" />
+        <service RE_ID="C85" ParentRE="C84" NameRE="Dienstaufruf">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+        </service>
+        <service RE_ID="C86" ParentRE="C84" NameRE="Mixer_dispense">
+          <method>Start</method>
+          <linkedOPCID>m1_s1</linkedOPCID>
+          <serviceID>C52</serviceID>
+        </service>
+        <service RE_ID="C87" ParentRE="C84" NameRE="Reactor_fill">
+          <method>Start</method>
+          <linkedOPCID>m2_s2</linkedOPCID>
+          <serviceID>C55</serviceID>
+        </service>
+        <service RE_ID="C89" ParentRE="C88" NameRE="Mixer_dose">
+          <method>Start</method>
+          <linkedOPCID>m1_s2</linkedOPCID>
+          <serviceID>C54</serviceID>
+        </service>
+        <service RE_ID="C90" ParentRE="C88" NameRE="Reactor_temp">
+          <method>Start</method>
+          <linkedOPCID>m2_s3</linkedOPCID>
+          <serviceID>C56</serviceID>
+        </service>
+      </runblock>
+    </recipe>
+  </plant>
+</ComosXmlExport>
