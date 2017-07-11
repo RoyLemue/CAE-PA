@@ -11,3 +11,12 @@ recipe/
 
 #files
 db.sqlite3
+main/__pycache__/
+static/libs/jsplumb/
+static/libs/d3-core/
+static/libs/d3-drag-example/
+static/libs/d3-hierarchy/
+static/libs/d3-polygon/d3-polygon.min.js
+templates/include/ModulForm.html
+main/forms.py
+static/libs/d3-polygon/
