@@ -41,19 +41,13 @@
       <author>S2620384</author>
       <runblock RE_ID="C83" ParentRE="C82">
         <recipestep name="0" type="RunBlock!SeriellerBlock" ParentRE="C83" TypeRE="SeriellerBlock" RE_ID="C84" />
-        <recipestep name="1" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C84" TypeRE="Dienstaufruf" RE_ID="C85" />
+        
         <recipestep name="2" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C84" TypeRE="Mixer_dispense" RE_ID="C86" />
         <recipestep name="3" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C84" TypeRE="Reactor_fill" RE_ID="C87" />
         <recipestep name="4" type="Rezeptschritt|SeriellerBlock!ParallelerBlock" ParentRE="C84" TypeRE="ParallelerBlock" RE_ID="C88" />
         <recipestep name="5" type="Rezeptschritt|Dienstaufruf" ParentRE="C88" TypeRE="Mixer_dose" RE_ID="C89" />
         <recipestep name="6" type="Rezeptschritt|Dienstaufruf" ParentRE="C88" TypeRE="Reactor_temp" RE_ID="C90" />
-        <service RE_ID="C85" ParentRE="C84" NameRE="Dienstaufruf">
-          <method>Start</method>
-          <linkedOPCID>
-          </linkedOPCID>
-          <serviceID>
-          </serviceID>
-        </service>
+       
         <service RE_ID="C86" ParentRE="C84" NameRE="Mixer_dispense">
           <method>Start</method>
           <linkedOPCID>m1_s1</linkedOPCID>
