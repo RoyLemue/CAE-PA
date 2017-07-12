@@ -82,17 +82,19 @@ class XmlRecipeBlock():
 
 class XmlRecipeServiceInstance:
     def __init__(self, Node, interface,nodeList,serviceList):
-        self.name = Node.attrib['RE_ID']
         self.id = Node.attrib['RE_ID']
-     #   print ('Service' +str(Node.attrib['RE_ID']) + 'parent ' + str(Node.attrib['ParentRE']))
+        print(self.id)
 
         for node in serviceList.values():
            if node.attrib['RE_ID'] == self.id:
-               print(node.attrib['NameRE'])
+               #print(node.attrib['NameRE'])
                self.method = node.find('method').text
                self.serviceID = node.find('serviceID').text
-               print (self.method)
-             #  print (self.serviceID)
+               self.parentRE = node.attrib['ParentRE']  # should be parentRE
+               #print('service ' +self.serviceID)
+               self.opcserviceNode = interface.services[self.serviceID]
+               self.parentModul = interface.modules[self.opcserviceNode.attrib['ParentID']]
+               #print (self.parentModul.attrib['Type'])
 
 
 
@@ -103,19 +105,15 @@ class XmlRecipeServiceInstance:
 #########################################################################
 class XmlRecipeInterface:
     def __init__(self, InterfaceNode):
-      #  self.name = InterfaceNode.find('opcservice').attrib["name"]
-        self.modules = []
+       # self.interfaceName = InterfaceNode.attrib['name']
+        self.modules = {}
+        self.services ={}
         for module in InterfaceNode.iter('module'):
-          #  self.modules.append(XmlInterfaceModul(module.attrib['name']))
-          self.modules.append(module.attrib['Type'])
+            self.modules[module.attrib['RE_ID']] = module
 
-
-    def getServiceInterface(self, ServiceName):
-        for module in self.modules:
-            for service in module.services:
-                if service.name == ServiceName:
-                    return service
-        return None
+        for service in InterfaceNode.iter('opcservice'):
+            self.name = service.attrib["RE_ID"]
+            self.services[self.name] = service
 
 class XmlInterfaceModul:
     def __init__(self, InterfaceNode):
@@ -131,40 +129,17 @@ class XmlInterfaceService:
     def __init__(self, InterfaceNode):
         self.name = InterfaceNode.find('service')
         self.opcName = InterfaceNode.find('OPC_UA_Methodenname').text
-        self.continous = int(InterfaceNode.find('Konti').text)
+        self.continous = bool(InterfaceNode.find('Konti').text)
         self.parameters = {}
         for paramNode in InterfaceNode.findall('parameter'):
             # paramType = paramNode.find('type').text
-            paramType = 'not set'
+            paramType = ''
             paramName = paramNode.find('parameterdesc').text
             paramVal = paramNode.find('defaultvalue').text
 
             self.parameters[paramName] = {'default': paramVal, 'type': paramType}
 
-class XmlInterfaceModul:
-    def __init__(self, InterfaceNode):
-        self.name = InterfaceNode.find('Modulschnittstellenabfrage').text
-        self.opcName = InterfaceNode.find('OPC_UA_Name').text
-        self.position = int(InterfaceNode.find('Position').text)
-        self.services = {}
-        for service in InterfaceNode.findall('Dienst'):
-            xmlService = XmlInterfaceService(service)
-            self.services[xmlService.opcName] = xmlService
 
-class XmlRecipeInterface:
-    def __init__(self, InterfaceNode):
-        self.name = InterfaceNode.find("Schnittstellenabfrage").text
-        self.modules = {}
-        for module in InterfaceNode.findall('Modulschnittstelle'):
-            xmlModule = XmlInterfaceModul(module)
-            self.modules[xmlModule.opcName] = xmlModule
-
-    def getServiceInterface(self, ServiceName):
-        for module in self.modules:
-            for service in module.services:
-                if service.name == ServiceName:
-                    return service
-        return None
 
 class BlockType(Enum):
     SERIAL = 1
@@ -177,4 +152,5 @@ class XmlTopologyParser:
         root = tree.getroot() #ComosXmlExport Element
         anlage = root.find('plant')
         self.interface = XmlRecipeInterface(anlage.find('interface'))
+
 
