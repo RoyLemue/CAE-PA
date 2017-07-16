@@ -1,0 +1,448 @@
+<ComosXmlExport>
+  <plant RE_ID="C1" ParentRE="C2">
+    <interface RE_ID="C3" ParentRE="C1" name="Schnittstelle">
+      <module RE_ID="C4" opcua_url="" opcua_name="Filter" ParentRE="C3" Type="Filter" />
+      <module RE_ID="C5" opcua_url="" opcua_name="Mixer" ParentRE="C3" Type="Mixer" />
+      <module RE_ID="C6" opcua_url="" opcua_name="Reactor" ParentRE="C3" Type="Reactor" />
+      <module RE_ID="C7" opcua_url="" opcua_name="Bottling" ParentRE="C3" Type="Bottling" />
+      <opcservice RE_ID="C8" ParentRE="C6" opcName="Fill_B301" opcID="" name="Fill_B301">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C9" ParentRE="C8" opcname="level" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C10" ParentRE="C4" opcName="Filter_Conti" opcID="" name="Filter_Conti">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C11" ParentRE="C7" opcName="Bottling_Conti" opcID="" name="Bottling_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C12" ParentRE="C11" opcname="fillVolume" necessary="0">
+          <value>50</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C13" ParentRE="C5" opcName="Fill_B201" opcID="" name="Fill_B201">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C14" ParentRE="C7" opcName="Bottling" opcID="" name="Bottling">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C15" ParentRE="C14" opcname="fillVolume" necessary="0">
+          <value>50</value>
+        </opcparameter>
+        <opcparameter RE_ID="C16" ParentRE="C14" opcname="numberOfBottles" necessary="0">
+          <value>3</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C17" ParentRE="C6" opcName="Fill_B301_Conti" opcID="" name="Fill_B301_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C18" ParentRE="C17" opcname="flowRate" necessary="0">
+          <value>100</value>
+        </opcparameter>
+        <opcparameter RE_ID="C19" ParentRE="C17" opcname="maxLevel" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C20" ParentRE="C4" opcName="Filter" opcID="" name="Filter">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C21" ParentRE="C20" opcname="volumen" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C22" ParentRE="C5" opcName="Fill_B202" opcID="" name="Fill_B202">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C23" ParentRE="C7" opcName="Uncouple" opcID="" name="Uncouple">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C24" ParentRE="C5" opcName="Fill_B203" opcID="" name="Fill_B203">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C25" ParentRE="C6" opcName="Mix_B301_Conti" opcID="" name="Mix_B301_Conti">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C26" ParentRE="C4" opcName="Clean" opcID="" name="Clean">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C27" ParentRE="C7" opcName="SafeState" opcID="" name="SafeState">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C28" ParentRE="C5" opcName="Fill_B204" opcID="" name="Fill_B204">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C29" ParentRE="C28" opcname="ratio201" necessary="0">
+          <value>33</value>
+        </opcparameter>
+        <opcparameter RE_ID="C30" ParentRE="C28" opcname="ratio202" necessary="0">
+          <value>33</value>
+        </opcparameter>
+        <opcparameter RE_ID="C31" ParentRE="C28" opcname="ratio203" necessary="0">
+          <value>33</value>
+        </opcparameter>
+        <opcparameter RE_ID="C32" ParentRE="C28" opcname="volume" necessary="0">
+          <value>300</value>
+        </opcparameter>
+        <opcparameter RE_ID="C33" ParentRE="C28" opcname="flowRate" necessary="1">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C34" ParentRE="C6" opcName="Mix_B301" opcID="" name="Mix_B301">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C35" ParentRE="C34" opcname="time" necessary="0">
+          <value>30</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C36" ParentRE="C4" opcName="Uncouple" opcID="" name="Uncouple">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C37" ParentRE="C6" opcName="Temper_B301_Conti" opcID="" name="Temper_B301_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C38" ParentRE="C37" opcname="temperature" necessary="0">
+          <value>35</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C39" ParentRE="C4" opcName="SafeState" opcID="" name="SafeState">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C40" ParentRE="C5" opcName="Fill_B204_Conti" opcID="" name="Fill_B204_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C41" ParentRE="C40" opcname="ratio201" necessary="0">
+          <value>0</value>
+        </opcparameter>
+        <opcparameter RE_ID="C42" ParentRE="C40" opcname="ratio202" necessary="0">
+          <value>0</value>
+        </opcparameter>
+        <opcparameter RE_ID="C43" ParentRE="C40" opcname="ratio203" necessary="0">
+          <value>0</value>
+        </opcparameter>
+        <opcparameter RE_ID="C44" ParentRE="C40" opcname="flowRate" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C45" ParentRE="C7" opcName="Empty" opcID="" name="Empty">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C46" ParentRE="C4" opcName="Empty" opcID="" name="Empty">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C47" ParentRE="C5" opcName="Fill_B201_Conti" opcID="" name="Fill_B201_Conti">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C48" ParentRE="C6" opcName="Temper_B301" opcID="" name="Temper_B301">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C49" ParentRE="C48" opcname="temperature" necessary="0">
+          <value>35</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C50" ParentRE="C6" opcName="LevelControl_B301_Conti" opcID="" name="LevelControl_B301_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C51" ParentRE="C50" opcname="level" necessary="0">
+          <value>50</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C52" ParentRE="C5" opcName="Fill_B202_Conti" opcID="" name="Fill_B202_Conti">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C53" ParentRE="C5" opcName="Fill_B203_Conti" opcID="" name="Fill_B203_Conti">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C54" ParentRE="C6" opcName="Dose_B301" opcID="" name="Dose_B301">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C55" ParentRE="C54" opcname="volume" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C56" ParentRE="C6" opcName="Uncouple" opcID="" name="Uncouple">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C57" ParentRE="C5" opcName="Dose_B204_Conti" opcID="" name="Dose_B204_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C58" ParentRE="C57" opcname="flowRate" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C59" ParentRE="C6" opcName="SafeState" opcID="" name="SafeState">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C60" ParentRE="C5" opcName="Dose_B204" opcID="" name="Dose_B204">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C61" ParentRE="C60" opcname="volumen" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C62" ParentRE="C5" opcName="Uncouple" opcID="" name="Uncouple">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C63" ParentRE="C6" opcName="Empty" opcID="" name="Empty">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C64" ParentRE="C5" opcName="SafeState" opcID="" name="SafeState">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C65" ParentRE="C5" opcName="Empty" opcID="" name="Empty">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C66" ParentRE="C5" opcName="FillBack_B201_Conti" opcID="" name="FillBack_B201_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C67" ParentRE="C66" opcname="flowRate" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C68" ParentRE="C5" opcName="FillBack_B202_Conti" opcID="" name="FillBack_B202_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C69" ParentRE="C68" opcname="flowRate" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C70" ParentRE="C5" opcName="FillBack_B203_Conti" opcID="" name="FillBack_B203_Conti">
+        <contiType>1</contiType>
+        <opcparameter RE_ID="C71" ParentRE="C70" opcname="flowRate" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C72" ParentRE="C5" opcName="FillBack_B201" opcID="" name="FillBack_B201">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C73" ParentRE="C72" opcname="level" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C74" ParentRE="C5" opcName="FillBack_B202" opcID="" name="FillBack_B202">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C75" ParentRE="C74" opcname="level" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+      <opcservice RE_ID="C76" ParentRE="C5" opcName="FillBack_B203" opcID="" name="FillBack_B203">
+        <contiType>0</contiType>
+        <opcparameter RE_ID="C77" ParentRE="C76" opcname="level" necessary="0">
+          <value>100</value>
+        </opcparameter>
+      </opcservice>
+    </interface>
+    <recipe RE_ID="C78" ParentRE="C1" name="Rezept1">
+      <creationDate>08.07.2017</creationDate>
+      <author>S2620384</author>
+      <runblock RE_ID="C79" ParentRE="C78">
+        <recipestep name="SB1" type="RunBlock!SeriellerBlock" ParentRE="C79" TypeRE="SeriellerBlock" RE_ID="C80" />
+        <recipestep name="DA1" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Mixer_FillB201" RE_ID="C81" />
+        <recipestep name="DA2" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Mixer_FillB202" RE_ID="C82" />
+        <recipestep name="DA3" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Mixer_FillB204" RE_ID="C83" />
+        <recipestep name="DA4" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Mixer_DoseB204" RE_ID="C84" />
+        <recipestep name="DA5" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Reactor_FillB301" RE_ID="C85" />
+        <recipestep name="DA6" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Reactor_TemperB301" RE_ID="C86" />
+        <recipestep name="DA7" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Reactor_DoseB301" RE_ID="C87" />
+        <recipestep name="DA8" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Filter_Filter" RE_ID="C88" />
+        <recipestep name="PB1" type="Rezeptschritt|SeriellerBlock!ParallelerBlock" ParentRE="C80" TypeRE="ParallelerBlock" RE_ID="C89" />
+        <recipestep name="P1" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C83" TypeRE="ratio201" RE_ID="C90" />
+        <recipestep name="P2" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C83" TypeRE="ratio202" RE_ID="C91" />
+        <recipestep name="P3" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C83" TypeRE="ratio203" RE_ID="C92" />
+        <recipestep name="P4" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C83" TypeRE="volume" RE_ID="C93" />
+        <recipestep name="P1" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C84" TypeRE="volumen" RE_ID="C94" />
+        <recipestep name="P1" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C85" TypeRE="level" RE_ID="C95" />
+        <recipestep name="P1" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C86" TypeRE="temperature" RE_ID="C96" />
+        <recipestep name="P1" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C88" TypeRE="volumen" RE_ID="C97" />
+        <recipestep name="DA1" type="Rezeptschritt|Dienstaufruf" ParentRE="C89" TypeRE="Bottling_Bottling" RE_ID="C98" />
+        <recipestep name="DA2" type="Rezeptschritt|Dienstaufruf" ParentRE="C89" TypeRE="Filter_Clean" RE_ID="C99" />
+        <recipestep name="P1" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C98" TypeRE="fillVolume" RE_ID="C100" />
+        <recipestep name="P2" type="Rezeptschritt|Dienstaufruf!Parameter" ParentRE="C98" TypeRE="numberOfBottles" RE_ID="C101" />
+        <service RE_ID="C81" ParentRE="C80" NameRE="Mixer_FillB201">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C13</serviceID>
+        </service>
+        <service RE_ID="C82" ParentRE="C80" NameRE="Mixer_FillB202">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C22</serviceID>
+        </service>
+        <service RE_ID="C83" ParentRE="C80" NameRE="Mixer_FillB204">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C28</serviceID>
+          <parameter RE_ID="C90" ParentRE="C83" name="ratio201">
+            <value>50</value>
+          </parameter>
+          <parameter RE_ID="C91" ParentRE="C83" name="ratio202">
+            <value>50</value>
+          </parameter>
+          <parameter RE_ID="C92" ParentRE="C83" name="ratio203">
+            <value>0</value>
+          </parameter>
+          <parameter RE_ID="C93" ParentRE="C83" name="volume">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C84" ParentRE="C80" NameRE="Mixer_DoseB204">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C60</serviceID>
+          <parameter RE_ID="C94" ParentRE="C84" name="volumen">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C85" ParentRE="C80" NameRE="Reactor_FillB301">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C8</serviceID>
+          <parameter RE_ID="C95" ParentRE="C85" name="level">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C86" ParentRE="C80" NameRE="Reactor_TemperB301">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C48</serviceID>
+          <parameter RE_ID="C96" ParentRE="C86" name="temperature">
+            <value>30</value>
+          </parameter>
+        </service>
+        <service RE_ID="C87" ParentRE="C80" NameRE="Reactor_DoseB301">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C54</serviceID>
+        </service>
+        <service RE_ID="C88" ParentRE="C80" NameRE="Filter_Filter">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C20</serviceID>
+          <parameter RE_ID="C97" ParentRE="C88" name="volumen">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C90" ParentRE="C83" NameRE="ratio201">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C90" ParentRE="C83" name="ratio201">
+            <value>50</value>
+          </parameter>
+        </service>
+        <service RE_ID="C91" ParentRE="C83" NameRE="ratio202">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C91" ParentRE="C83" name="ratio202">
+            <value>50</value>
+          </parameter>
+        </service>
+        <service RE_ID="C92" ParentRE="C83" NameRE="ratio203">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C92" ParentRE="C83" name="ratio203">
+            <value>0</value>
+          </parameter>
+        </service>
+        <service RE_ID="C93" ParentRE="C83" NameRE="volume">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C93" ParentRE="C83" name="volume">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C94" ParentRE="C84" NameRE="volumen">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C94" ParentRE="C84" name="volumen">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C95" ParentRE="C85" NameRE="level">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C95" ParentRE="C85" name="level">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C96" ParentRE="C86" NameRE="temperature">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C96" ParentRE="C86" name="temperature">
+            <value>30</value>
+          </parameter>
+        </service>
+        <service RE_ID="C97" ParentRE="C88" NameRE="volumen">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C97" ParentRE="C88" name="volumen">
+            <value>100</value>
+          </parameter>
+        </service>
+        <service RE_ID="C98" ParentRE="C89" NameRE="Bottling_Bottling">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C14</serviceID>
+          <parameter RE_ID="C100" ParentRE="C98" name="fillVolume">
+            <value>50</value>
+          </parameter>
+          <parameter RE_ID="C101" ParentRE="C98" name="numberOfBottles">
+            <value>2</value>
+          </parameter>
+        </service>
+        <service RE_ID="C99" ParentRE="C89" NameRE="Filter_Clean">
+          <method>Start</method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>C26</serviceID>
+        </service>
+        <service RE_ID="C100" ParentRE="C98" NameRE="fillVolume">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C100" ParentRE="C98" name="fillVolume">
+            <value>50</value>
+          </parameter>
+        </service>
+        <service RE_ID="C101" ParentRE="C98" NameRE="numberOfBottles">
+          <method>
+          </method>
+          <linkedOPCID>
+          </linkedOPCID>
+          <serviceID>
+          </serviceID>
+          <parameter RE_ID="C101" ParentRE="C98" name="numberOfBottles">
+            <value>2</value>
+          </parameter>
+        </service>
+      </runblock>
+    </recipe>
+  </plant>
+</ComosXmlExport>
