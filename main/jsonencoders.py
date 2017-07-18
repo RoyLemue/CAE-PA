@@ -28,16 +28,18 @@ class JsonDataEncoder:
         elif isinstance(obj, OpcService):
             return {
             'name' : obj.name,
+            'module': obj.client.opcName,
             'state': self.encode(obj.State),
+            'methods': self.encode(obj.getMethods()),
             'parameters': self.encode(obj.parameters)
         }
         elif isinstance(obj, OpcClient):
             return {
-            'name' : obj.type,
+            'name' : obj.opcName,
             'services': self.encode(obj.ServiceList)
         }
 
-        elif isinstance(obj, Recipe):
+        elif isinstance(obj, RecipeFileObject):
             return {
             'file': obj.fileName,
             'instance': self.encode(obj.parser.recipe),
@@ -57,15 +59,32 @@ class JsonDataEncoder:
             'state': self.encode(obj.state),
             'timeout': obj.timeout
             }
-        elif isinstance(obj, Topology):
+        elif isinstance(obj, TopologyFileObject):
             return self.encode({
             'file': obj.fileName,
             'interface': self.encode(obj.parser.interface)
         })
-        elif isinstance(obj, XmlRecipeInterface):
+        elif isinstance(obj, XmlRecipeInstance):
             return {
             'name': obj.name,
-            'modules': self.encode(obj.modules)
+            'date': obj.date,
+            'author': obj.author,
+            'runBlock': self.encode(obj.runBlock)
+        }
+        elif isinstance(obj, XmlRecipeBlock):
+            return {
+            'name': obj.name,
+            'type': obj.blockType,
+            'childs': self.encode(obj.childs),
+            'order': self.encode(obj.sortList),
+        }
+        elif isinstance(obj, XmlRecipeServiceInstance):
+            return {
+            'name': obj.name,
+            'method' : obj.method,
+            'state': self.encode(obj.state),
+            'timeout': obj.timeout,
+            'opcService': self.encode(obj.opcServiceNode)
         }
         elif isinstance(obj, XmlRecipeInterface):
             return {
@@ -75,7 +94,6 @@ class JsonDataEncoder:
         elif isinstance(obj, XmlInterfaceModul):
             return {
             'name': obj.name,
-            'opcName': obj.opcName,
             'position': obj.position,
             'services': self.encode(obj.services)
         }
@@ -86,6 +104,11 @@ class JsonDataEncoder:
             'continous': obj.continous,
             'parameters': self.encode(obj.parameters)
         }
+        elif isinstance(obj, RecipeTreeThread):
+            return {
+                "state" : obj.state,
+                "root" : obj.root
+            }
         elif isinstance(obj, OpcState):
             return str(obj)
         elif isinstance(obj, OpcMethod):

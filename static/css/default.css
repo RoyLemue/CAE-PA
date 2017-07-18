@@ -37,3 +37,13 @@ body > .container {
 code {
   font-size: 80%;
 }
+
+
+
+span.badge {
+  float: right;
+}
+
+.table-bordered td {
+    padding: 10px;
+}

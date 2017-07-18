@@ -55,24 +55,12 @@ def getState(request, moduleName, serviceName):
 def getJsonInformation(request):
     TeilAnlage = RecipeHandler.instance.anlage
 
-    fillService = TeilAnlage.parts['Mixer'].getService('fill')
-    doseService = TeilAnlage.parts['Mixer'].getService('dose')
-    dispenseService = TeilAnlage.parts['Mixer'].getService('dispense')
-
-    recipeQueue = [
-        RecipeElementThread(sys.stdout, fillService, 'start'),
-        RecipeElementThread(sys.stdout, doseService, 'start'),
-        RecipeElementThread(sys.stdout, fillService, 'reset'),
-        RecipeElementThread(sys.stdout, doseService, 'stop'),  # has to be stopped before dispense
-        RecipeElementThread(sys.stdout, doseService, 'reset'),
-        RecipeElementThread(sys.stdout, dispenseService, 'start'),
-        RecipeElementThread(sys.stdout, dispenseService, 'reset'),
-        RecipeElementThread(sys.stdout, doseService, 'reset'),
-    ]
+    recipe = RecipeHandler.instance.parseRecipe('opcRecipe2.XML')
+    #RecipeHandler.instance.startRecipeFromFilename('opcRecipe2.XML')
     encoder =JsonDataEncoder()
     jsonData = encoder.encode({'status': 'OK',
             'anlage': TeilAnlage.parts,
-            'recipe': recipeQueue,
+            'recipe': recipe,
             'topology':RecipeHandler.instance.actualTopology})
 
     return JsonResponse(jsonData)
@@ -174,7 +162,7 @@ def recipeStart(request, recipeName):
     return JsonResponse({'status' : 'OK'})
 
 def recipeParse(request, recipeName):
-    RecipeHandler.instance.parseRecipe(recipeName)
+    recipeFile = RecipeHandler.instance.parseRecipe(recipeName)
     return JsonResponse({'status' : 'OK',})
 
 

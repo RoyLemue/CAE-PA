@@ -7,6 +7,7 @@
 import xml.etree.ElementTree as et
 from enum import Enum
 import re as regex
+import main.models
 
 def sortNode(x, y):
        if x.id < y.id:
@@ -15,6 +16,12 @@ def sortNode(x, y):
             return 0
        else:
             return -1
+
+class RecipeElementState(Enum):
+    WAITING = 1
+    RUNNING = 2
+    COMPLETED = 3
+    ABORTED = 4
 
 class XmlRecipeParser:
     def __init__(self, xmlFile):
@@ -29,111 +36,124 @@ class XmlRecipeParser:
       #  print (anlage.find('recipe').attrib['name'])
 
 class XmlRecipeInstance:
-    def __init__(self, Node, interface):
+    def __init__(self, node, interface):
         #self.name = Node.find('recipename').text
-        self.nodeList = {}
-        self.serviceList ={}
-        for stepNode in Node.iter('recipestep'):
-            re_id = stepNode.attrib['RE_ID']
-      #      print ('step'+re_id)
-            self.nodeList[re_id] = stepNode
+        self.id = node.attrib['RE_ID']
+        self.parentId = node.attrib['ParentRE']
+        self.name = node.attrib['name']
+        self.date = node.find('creationDate').text
+        self.author = node.find('author').text
+        servicesPool = []
+        for service in node.iter('service'):
+            servicesPool.append(service)
+        blockPool = node.iter('recipestep')
 
-        for stepNode in Node.iter('service'):
-            re_id = stepNode.attrib['RE_ID']
-      #      print ('step'+re_id)
-            self.serviceList[re_id] = stepNode
-
-        rootId = Node.find('runblock').attrib['RE_ID']
-        for node in self.nodeList.values():
-            if rootId == node.attrib['ParentRE']:
-                self.RunBlock = XmlRecipeBlock(node, interface,self.nodeList,self.serviceList)
-                break
-
-        #self.StopBlock = XmlRecipeBlock(Node.find('StopBlock', interface))
+        self.runBlock = XmlRecipeBlock(node.find('runblock'), interface, blockPool, servicesPool)
 
 
-class XmlRecipeBlock():
-    def __init__(self, Node,interface,nodeList,serviceList):
-        self.name = Node.attrib['name']
+
+class XmlRecipeBlock:
+    def __init__(self, Node,interface,blockPool,servicesPool):
+        if 'name' not in Node.attrib:
+            self.name =""
+        else:
+            self.name = Node.attrib['name']
         self.id = Node.attrib['RE_ID'] # root ID
-        self.parentNode = Node.attrib['ParentRE'] # take the temp elem ( at first iteration = runblock
+        self.parentId = Node.attrib['ParentRE'] # take the temp elem ( at first iteration = runblock
         self.childs ={}
         self.sortList = []
         keyList = []
+        blockTypeString = Node.attrib['type']
+        self.blockType = regex.split('\!|\|', blockTypeString)[-1:][0]
 
       #  print (nodeList.keys())
-        for node in nodeList.values():
-            if str(node.attrib['ParentRE']) == self.id:
-                blockTypeString = node.attrib['type']
+        for poolNode in blockPool:
+            if str(poolNode.attrib['ParentRE']) == self.id:
+                blockTypeString = poolNode.attrib['type']
                 blockType = regex.split('\!|\|', blockTypeString)[-1:]
 
                 if blockType[0] == 'ParallelerBlock' or blockType[0] == 'SeriellerBlock':
-                     print ('block' +str(node.attrib['RE_ID']) + 'parent ' + str(node.attrib['ParentRE']))
-                     child = XmlRecipeBlock(node, interface, nodeList,serviceList)
-
+                     # print ('block' +str(poolNode.attrib['RE_ID']) + 'parent ' + str(poolNode.attrib['ParentRE']))
+                     child = XmlRecipeBlock(poolNode, interface, blockPool,servicesPool)
+                     self.childs[child.id] = child
+                     self.sortList.append(child.id)
                 else:
-                    child = XmlRecipeServiceInstance(node, interface, nodeList, serviceList)
-                self.childs[child.id] = child
-        keys = []
-        for key in self.childs.keys():
-            keys.append(key)
-        self.sortList = keys.sort()
+                    for service in servicesPool:
+                        if poolNode.attrib['RE_ID'] == service.attrib['RE_ID']:
+                            child = XmlRecipeServiceInstance(service, interface, blockPool, servicesPool)
+                            self.childs[child.id] = child
+                            self.sortList.append(child.id)
+        self.sortList.sort()
 
 
 class XmlRecipeServiceInstance:
-    def __init__(self, Node, interface,nodeList,serviceList):
+    def __init__(self, Node, interface,blockPool,servicesPool):
+        self.name = Node.attrib['NameRE']
         self.id = Node.attrib['RE_ID']
-        print(self.id)
+        self.parentId = Node.attrib['ParentRE']
+        self.method = Node.find('method').text
+        self.opcId = Node.find('linkedOPCID').text
+        self.serviceId = Node.find('serviceID').text
+        self.xmlInterfaceObject = interface.getServiceById(self.serviceId)
+        self.parentModul = interface.modules[self.xmlInterfaceObject.parentId]
 
-        for node in serviceList.values():
-           if node.attrib['RE_ID'] == self.id:
-               #print(node.attrib['NameRE'])
-               self.method = node.find('method').text
-               self.serviceID = node.find('serviceID').text
-               self.parentRE = node.attrib['ParentRE']  # should be parentRE
-               #print('service ' +self.serviceID)
-               self.opcserviceNode = interface.services[self.serviceID]
-               self.parentModul = interface.modules[self.opcserviceNode.attrib['ParentID']]
-               #print (self.parentModul.attrib['Type'])
-
-
-
+        self.opcServiceNode = main.models.RecipeHandler.instance.anlage.parts[self.parentModul.name].ServiceList[self.xmlInterfaceObject.opcName]
+        self.state = RecipeElementState.WAITING
+        self.timeout = 10.0
+        #print (self.parentModul.attrib['Type'])
 
 
 #########################################################################
 #Interface                                                              #
 #########################################################################
+
 class XmlRecipeInterface:
     def __init__(self, InterfaceNode):
-       # self.interfaceName = InterfaceNode.attrib['name']
+        self.name = InterfaceNode.attrib['name']
         self.modules = {}
         self.services ={}
-        for module in InterfaceNode.iter('module'):
-            self.modules[module.attrib['RE_ID']] = module
+        servicesPool = InterfaceNode.findall('opcservice')
+        for module in InterfaceNode.findall('module'):
+            self.modules[module.attrib['RE_ID']] = XmlInterfaceModul(module, servicesPool)
 
-        for service in InterfaceNode.iter('opcservice'):
-            self.name = service.attrib["RE_ID"]
-            self.services[self.name] = service
+    def getServiceById(self, serviceId):
+        for module in self.modules.values():
+            for service in module.services.values():
+                if service.treeId == serviceId:
+                    return service
+        return None
+
+
 
 class XmlInterfaceModul:
-    def __init__(self, InterfaceNode):
-        self.name = InterfaceNode.find('Modulschnittstellenabfrage')
-        self.opcName = InterfaceNode.find('OPC_UA_Name')
-#        self.position = int(InterfaceNode.find('Position'))
-        self.services = []
-        for service in InterfaceNode.findall('Dienst'):
-            self.services.append(XmlInterfaceService(service))
+
+    def __init__(self, modulNode, servicesPool):
+        self.id = modulNode.attrib['RE_ID']
+        self.parentId = modulNode.attrib['ParentRE']
+        self.name = modulNode.attrib['Type']
+        self.position = modulNode.attrib['position']
+        self.services = {}
+        for service in servicesPool:
+            if service.attrib['ParentRE'] == modulNode.attrib['RE_ID']:
+                s = XmlInterfaceService(self, service)
+                self.services[s.opcName]=s
 
 
 class XmlInterfaceService:
-    def __init__(self, InterfaceNode):
-        self.name = InterfaceNode.find('service')
-        self.opcName = InterfaceNode.find('OPC_UA_Methodenname').text
-        self.continous = bool(InterfaceNode.find('Konti').text)
+    def __init__(self, parentNode, serviceNode):
+        self.treeId = serviceNode.attrib['RE_ID']
+        self.parentId = serviceNode.attrib['ParentRE']
+        self.name = serviceNode.attrib['name']
+        self.opcName = serviceNode.attrib['opcName']
+        self.id = serviceNode.attrib['opcID']
+        self.continous = int(serviceNode.find('contiType').text)
         self.parameters = {}
-        for paramNode in InterfaceNode.findall('parameter'):
+        self.parentModule = parentNode
+
+        # TODO Check with COMOS
+        for paramNode in serviceNode.findall('parameter'):
             # paramType = paramNode.find('type').text
-            paramType = ''
+            paramType = 'not set'
             paramName = paramNode.find('parameterdesc').text
             paramVal = paramNode.find('defaultvalue').text
 
@@ -152,5 +172,4 @@ class XmlTopologyParser:
         root = tree.getroot() #ComosXmlExport Element
         anlage = root.find('plant')
         self.interface = XmlRecipeInterface(anlage.find('interface'))
-
 

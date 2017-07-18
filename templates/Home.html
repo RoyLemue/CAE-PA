@@ -4,30 +4,24 @@
 
 {% block js_ready %}
 
-    var moduleList = new Array();
-    var mokaModuleNode = $(".MokaModule").first();
-    var module;
-    var service, serviceNode;
-    {% for name, module in Teilanlage.parts.items %}
-        module = new MokaModule(mokaModuleNode, '{{name}}' )
-        moduleList.push(module);
-        serviceNode = mokaModuleNode.children("table").children("tbody").children().first();
-        {% for service in module.ServiceList %}
-            module.services.push(new MokaService(serviceNode, module, '{{service.name}}' ));
-            serviceNode = serviceNode.next();
-        {% endfor %}
-        mokaModuleNode = mokaModuleNode.next();
-    {% endfor %}
 
-    function updateMethods(){
-        moduleList.forEach(function(module, index, array){
-            module.services.forEach(function(updateservice, index){
-                updateservice.updateState();
-            });
+    function updateData(){
+        $.getJSON("/json/",
+            function(data) {
+                if (data.status == 'OK'){
+                    window.MokaAnlage.update(data.anlage);
+                }
         });
     }
-    //updateMethods();
-    setInterval(updateMethods , 500);
+
+    $.getJSON("/json/",
+        function(data) {
+            if (data.status == 'OK'){
+                window.MokaAnlage = new TMokaAnlage($('#MokaAnlage').first(), data.anlage);
+                window.Recipe = new TRecipe($('#ActualRecipe').first(), data.recipe);
+                setInterval(updateData , 1000);
+            }
+    });
 
 {% endblock %}
 
@@ -36,139 +30,114 @@
     <div class="page-header">
         <h1>Status</h1>
     </div>
-    <div class="row">
-
-        {% for name, module in Teilanlage.parts.items %}
-        <div class="MokaModule col-xs-6">
-        <h1>{{name}}</h1>
-        <table class="table table-hover" id="serviceTable">
-            <thead>
-                <tr>
-                    <th>Dienst</th>
-                    <th>Zustand</th>
-                    <th>Methoden</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for service in module.ServiceList %}
-                <tr>
-                    <td>{{service.name}}</td>
-                    <td>{{service.State.name}}</td>
-                    <td>
-                        <div class="text-center topButtonGroup">
-                             <div class="btn-group text-center" role="group" aria-label="...">
-                        {% for method in service.Methods %}
-                              <a class="btn btn-primary" href="#" onclick="callServiceMethod( '{{name}}','{{service.name}}','{{method.name}}' )">{{method.name}}</a>
-                        {% endfor %}
-                        </div></div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        </div>
-        {% endfor %}
-
-        <h1>Laufende Jobs</h1>
-        keine
-
-        <h1>Rezepte</h1>
-        <table class="table table-hover">
-            <thead>
-              <tr>
-                  <th> Neues XML-Rezept hochladen </th>
-              </tr>
-            </thead>
-          <tbody>
-            <tr>
-                <td>
-
-                    <form action="{{ request.build_absolute_uri }}uploadRecipe/" method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <th>
-                        <input type="file" name="file"/>
-                    </th> <th>
-                        <input type="submit" value="Upload File" href="{% url 'Home View' %}"/>
-                </th>
-                </form>
-
-                </tr>
-
-          </tbody>
-        </table>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Rezeptdatei</th>
-                    <th>Datum</th>
-                    <th>Funktionen</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for recipe in Recipes %}
-                <tr>
-                    <td>{{recipe}}</td>
-                    <td></td>
-                    <td>
-                        <div class="text-center topButtonGroup">
-                            <div class="btn-group text-center" role="group" aria-label="...">
-                              <a class="btn btn-primary" href="/recipe/parse/{{recipe}}/">Parsen</a>
-                              <a class="btn btn-success" href="#" onclick="startrecipe('{{recipe}}')">Start</a>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="row" id="MokaAnlage">
     </div>
-     <h1>Anlagentopologie</h1>
-        <table class="table table-hover">
-            <thead>
-              <tr>
-                  <th> Neue XML-Anlagentopologie hochladen </th>
-              </tr>
-            </thead>
-          <tbody>
-            <tr>
-                <td>
-
-                    <form action="{{ request.build_absolute_uri }}uploadTopologie/" method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <th>
-                        <input type="file" name="file"/>
-                    </th> <th>
-                        <input type="submit" value="Upload File" href="{% url 'Home View' %}"/>
-                </th>
-                </form>
-
-                </tr>
-
-          </tbody>
-        </table>
-         <table class="table table-hover">
-            <thead>
+    <div class="row">
+        <div class="col-xs-12 " id="ActualRecipe">
+            <h1>Laufende Jobs</h1>
+            keine
+        </div>
+        <div class="col-xs-12">
+            <h1>Rezepte</h1>
+            <table class="table table-hover">
+                <thead>
+                  <tr>
+                      <th> Neues XML-Rezept hochladen </th>
+                  </tr>
+                </thead>
+              <tbody>
                 <tr>
-                    <th>Topologiedatei</th>
-                    <th>Datum</th>
-
-                </tr>
-            </thead>
-            <tbody>
-                {% for topologie in Topologies %}
-                <tr>
-                    <td>{{topologie}}</td>
-                    <td></td>
                     <td>
-                        <div class="text-center topButtonGroup">
-                            <div class="btn-group text-center" role="group" aria-label="...">
+
+                        <form action="{{ request.build_absolute_uri }}uploadRecipe/" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <th>
+                            <input type="file" name="file"/>
+                        </th> <th>
+                            <input type="submit" value="Upload File" href="{% url 'Home View' %}"/>
+                    </th>
+                    </form>
+
+                    </tr>
+
+              </tbody>
+            </table>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Rezeptdatei</th>
+                        <th>Datum</th>
+                        <th>Funktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recipe in Recipes %}
+                    <tr>
+                        <td>{{recipe}}</td>
+                        <td></td>
+                        <td>
+                            <div class="text-center topButtonGroup">
+                                <div class="btn-group text-center" role="group" aria-label="...">
+                                  <a class="btn btn-primary" href="/recipe/parse/{{recipe}}/">Parsen</a>
+                                  <a class="btn btn-success" href="#" onclick="startrecipe('{{recipe}}')">Start</a>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    <div class="col-xs-12" id="Topology">
+         <h1>Anlagentopologie</h1>
+            <table class="table table-hover">
+                <thead>
+                  <tr>
+                      <th> Neue XML-Anlagentopologie hochladen </th>
+                  </tr>
+                </thead>
+              <tbody>
+                <tr>
+                    <td>
+
+                        <form action="{{ request.build_absolute_uri }}uploadTopologie/" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <th>
+                            <input type="file" name="file"/>
+                        </th> <th>
+                            <input type="submit" value="Upload File" href="{% url 'Home View' %}"/>
+                    </th>
+                    </form>
+
+                    </tr>
+
+              </tbody>
+            </table>
+             <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Topologiedatei</th>
+                        <th>Datum</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for topologie in Topologies %}
+                    <tr>
+                        <td>{{topologie}}</td>
+                        <td></td>
+                        <td>
+                            <div class="text-center topButtonGroup">
+                                <div class="btn-group text-center" role="group" aria-label="...">
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

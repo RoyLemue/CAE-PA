@@ -1,10 +1,10 @@
 <ComosXmlExport>
   <plant RE_ID="C1" ParentRE="C2">
     <interface RE_ID="C3" ParentRE="C1" name="Schnittstelle">
-      <module RE_ID="C4" opcua_url="" opcua_name="Filter" ParentRE="C3" Type="Filter" />
-      <module RE_ID="C5" opcua_url="" opcua_name="Mixer" ParentRE="C3" Type="Mixer" />
-      <module RE_ID="C6" opcua_url="" opcua_name="Reactor" ParentRE="C3" Type="Reactor" />
-      <module RE_ID="C7" opcua_url="" opcua_name="Bottling" ParentRE="C3" Type="Bottling" />
+      <module RE_ID="C4" opcua_url="" opcua_name="Filter" ParentRE="C3" Type="Filter" position="1" />
+      <module RE_ID="C5" opcua_url="" opcua_name="Mixer" ParentRE="C3" Type="Mixer" position="2" />
+      <module RE_ID="C6" opcua_url="" opcua_name="Reactor" ParentRE="C3" Type="Reactor" position="3" />
+      <module RE_ID="C7" opcua_url="" opcua_name="Bottling" ParentRE="C3" Type="Bottling" position="4" />
       <opcservice RE_ID="C8" ParentRE="C6" opcName="Fill_B301" opcID="" name="Fill_B301">
         <contiType>0</contiType>
         <opcparameter RE_ID="C9" ParentRE="C8" opcname="level" necessary="0">
@@ -219,7 +219,7 @@
     <recipe RE_ID="C78" ParentRE="C1" name="Rezept1">
       <creationDate>08.07.2017</creationDate>
       <author>S2620384</author>
-      <runblock RE_ID="C79" ParentRE="C78">
+      <runblock RE_ID="C79" ParentRE="C78" type="SeriellerBlock">
         <recipestep name="SB1" type="RunBlock!SeriellerBlock" ParentRE="C79" TypeRE="SeriellerBlock" RE_ID="C80" />
         <recipestep name="DA1" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Mixer_FillB201" RE_ID="C81" />
         <recipestep name="DA2" type="Rezeptschritt|SeriellerBlock!Dienstaufruf" ParentRE="C80" TypeRE="Mixer_FillB202" RE_ID="C82" />

@@ -1,0 +1,27 @@
+<ComosXmlExport>
+  <plant RE_ID="C1" ParentRE="C2">
+   
+    <interface RE_ID="C49" ParentRE="C1" name="OPC-UA">
+      <module RE_ID="C50" ParentRE="C49" Type="Mixer" position="1" />
+      <module RE_ID="C51" ParentRE="C49" Type="Reactor" position="2" />
+      <opcservice RE_ID="C52" ParentRE="C50" name="dispense" opcName="dispense" opcID="m1_s1">
+        <contiType>0</contiType>
+      </opcservice>
+      <opcservice RE_ID="C53" ParentRE="C51" name="cstr" opcName="cstr" opcID="m2_s1">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C54" ParentRE="C50" name="dose" opcName="dose" opcID="m1_s2">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C55" ParentRE="C51" name="fill" opcName="fill" opcID="m2_s2">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C56" ParentRE="C51" name="temp" opcName="temp" opcID="m2_s3">
+        <contiType>1</contiType>
+      </opcservice>
+      <opcservice RE_ID="C57" ParentRE="C50" name="fill" opcName="fill" opcID="m1_s3">
+        <contiType>0</contiType>
+      </opcservice>
+    </interface>
+  </plant>
+</ComosXmlExport>
