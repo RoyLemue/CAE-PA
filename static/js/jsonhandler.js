@@ -112,6 +112,7 @@ function TRecipeService(element, data){
     this.opcName = data.opcService.name;
     this.module = data.opcService.module;
     this.method = data.method.toLowerCase();
+    this.serviceType = data.serviceType;
     this.state = data.state.split('.')[1];
     if(this.state == 'WAITING')
         panel = $('<div class="panel panel-info"></div>');
@@ -130,9 +131,12 @@ function TRecipeService(element, data){
     panel.append(this.head);
     panel.append(this.body);
     this.head.html(this.name+'<span class="badge adge-default badge-pill">'+this.state+'</span>');
-    this.body.append($('<p></p>').append('OPC-Dienst: '+this.opcName));
-    this.body.append($('<p></p>').append('Methode: '+this.method));
-    this.body.append($('<p></p>').append('Timeout: '+this.timeout));
+    this.body.append($('<div class="col-xs-4"></div>').append('Modul: '+this.module));
+    this.body.append($('<div class="col-xs-4"></div>').append('OPC-Dienst: '+this.opcName));
+    this.body.append($('<div class="col-xs-4"></div>').append('Methode: '+this.method));
+    this.body.append($('<div class="col-xs-4"></div>').append('Timeout: '+this.timeout));
+    this.body.append($('<div class="col-xs-4"></div>').append('Stop-Bedingung: '+this.serviceType.complete.toString()));
+
 
 }
 
@@ -189,14 +193,20 @@ function TRecipe(element, data, options) {
 }
 
 function startRecipe(recipe){
-    $.getJSON("/module/"+module+"/call/"+service+"/"+method+"/",
+    $.getJSON("/recipe/start/"+recipe+"/",
         function (data){
-
+            $.toaster({'title': 'Rezeptstart',
+            'message':'Das Rezept \''+recipe+'\' wurde gestartet.',
+            'priority': 'success',
+            'timeout': 5000});
     })
 }
 function callServiceMethod(module, service, method){
     $.getJSON("/module/"+module+"/call/"+service+"/"+method+"/",
         function(data) {
-
+            $.toaster({'title': 'Serviceaufruf '+method,
+            'message':'Der Service '+module+'.'+service+' konnte erfolgreich ausgeführt werden',
+            'priority': 'success',
+            'timeout': 5000});
     });
 }

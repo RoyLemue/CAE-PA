@@ -54,8 +54,12 @@ def getState(request, moduleName, serviceName):
 
 def getJsonInformation(request):
     TeilAnlage = RecipeHandler.instance.anlage
-
-    recipe = RecipeHandler.instance.parseRecipe('opcRecipe2.XML')
+    if(RecipeHandler.instance.actualRecipeThread):
+        recipe = RecipeHandler.instance.actualRecipeThread.recipe
+    elif(RecipeHandler.instance.completeRecipe):
+        recipe = RecipeHandler.instance.completeRecipe
+    else:
+        recipe = None
     #RecipeHandler.instance.startRecipeFromFilename('opcRecipe2.XML')
     encoder =JsonDataEncoder()
     jsonData = encoder.encode({'status': 'OK',
@@ -158,7 +162,7 @@ def handle_uploaded_structure(file, filename):
 
 @login_required
 def recipeStart(request, recipeName):
-    RecipeHandler.instance.startRecipeWithFilename(recipeName)
+    RecipeHandler.instance.startRecipeFromFilename(recipeName)
     return JsonResponse({'status' : 'OK'})
 
 def recipeParse(request, recipeName):

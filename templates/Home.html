@@ -10,6 +10,11 @@
             function(data) {
                 if (data.status == 'OK'){
                     window.MokaAnlage.update(data.anlage);
+                    $('#ActualRecipe').first().html('');
+                    if(data.recipe){
+                        window.Recipe = null;
+                        window.Recipe = new TRecipe($('#ActualRecipe').first(), data.recipe);
+                    }
                 }
         });
     }
@@ -18,7 +23,9 @@
         function(data) {
             if (data.status == 'OK'){
                 window.MokaAnlage = new TMokaAnlage($('#MokaAnlage').first(), data.anlage);
-                window.Recipe = new TRecipe($('#ActualRecipe').first(), data.recipe);
+                if(data.recipe){
+                    window.Recipe = new TRecipe($('#ActualRecipe').first(), data.recipe);
+                }
                 setInterval(updateData , 1000);
             }
     });
@@ -79,7 +86,7 @@
                             <div class="text-center topButtonGroup">
                                 <div class="btn-group text-center" role="group" aria-label="...">
                                   <a class="btn btn-primary" href="/recipe/parse/{{recipe}}/">Parsen</a>
-                                  <a class="btn btn-success" href="#" onclick="startrecipe('{{recipe}}')">Start</a>
+                                  <a class="btn btn-success" href="#" onclick="startRecipe('{{recipe}}')">Start</a>
                                 </div>
                             </div>
                         </td>

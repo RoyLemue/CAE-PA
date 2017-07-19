@@ -96,10 +96,19 @@ class XmlRecipeServiceInstance:
         self.serviceId = Node.find('serviceID').text
         self.xmlInterfaceObject = interface.getServiceById(self.serviceId)
         self.parentModul = interface.modules[self.xmlInterfaceObject.parentId]
-
-        self.opcServiceNode = main.models.RecipeHandler.instance.anlage.parts[self.parentModul.name].ServiceList[self.xmlInterfaceObject.opcName]
         self.state = RecipeElementState.WAITING
+        self.opcServiceNode = main.models.RecipeHandler.instance.anlage.parts[self.parentModul.name].ServiceList[self.xmlInterfaceObject.opcName]
+
         self.timeout = 10.0
+
+        self.methodName = self.method.lower()
+        if self.methodName == 'start' and not self.xmlInterfaceObject.continous:
+            # TODO all valid run
+            self.type = main.models.RecipeType([main.models.OpcState.IDLE],
+                                 [main.models.OpcState.STARTING, main.models.OpcState.RUNNING, main.models.OpcState.PAUSING, main.models.OpcState.PAUSED],
+                                 [main.models.OpcState.COMPLETE])
+        else:
+            self.type = main.models.RECIPE_COMMAND[main.models.METHOD_MAP[self.methodName]]
         #print (self.parentModul.attrib['Type'])
 
 

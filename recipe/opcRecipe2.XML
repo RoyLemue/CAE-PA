@@ -7,16 +7,16 @@
         <contiType>0</contiType>
       </opcservice>
       <opcservice RE_ID="C7" ParentRE="C5" opcName="cstr" opcID="" name="cstr">
-        <contiType>0</contiType>
+        <contiType>1</contiType>
       </opcservice>
       <opcservice RE_ID="C8" ParentRE="C4" opcName="dose" opcID="" name="dose">
-        <contiType>0</contiType>
+        <contiType>1</contiType>
       </opcservice>
       <opcservice RE_ID="C9" ParentRE="C5" opcName="fill" opcID="" name="fill">
-        <contiType>0</contiType>
+        <contiType>1</contiType>
       </opcservice>
       <opcservice RE_ID="C10" ParentRE="C5" opcName="temp" opcID="" name="temp">
-        <contiType>0</contiType>
+        <contiType>1</contiType>
       </opcservice>
       <opcservice RE_ID="C11" ParentRE="C4" opcName="fill" opcID="" name="fill">
         <contiType>0</contiType>

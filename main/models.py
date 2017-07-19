@@ -167,11 +167,7 @@ class OpcService:
         self.setState(nodeval)
 
     def callMethod(self, method):
-        methodName = method.lower()
-        recipeType = RECIPE_COMMAND[METHOD_MAP[methodName]]
-        if self.State in recipeType.start:
-            # call from opcua node
-            self.commands.call_method("1:"+method)
+        self.commands.call_method("1:"+method)
 
     def getMethods(self):
         return self.Methods
@@ -261,17 +257,34 @@ class RecipeElementThread(threading.Thread):
         self.stdout = stdout
         self.stderr = None
         self.node = node
-        self.methodName = node.method.lower()
-        self.type = RECIPE_COMMAND[METHOD_MAP[self.methodName]]
+        self.node.state = RecipeElementState.WAITING
         self.condition = condition
+
 
     def run(self):
         self.condition.acquire()
-        print('start Element Thread, '+self.node.name+':'+self.methodName)
+        print('start Element Thread, '+self.node.name+':'+self.node.methodName)
+
+        if self.node.opcServiceNode.State not in self.node.type.start:
+            self.node.state = RecipeElementState.ABORTED
+            self.condition.notify()  # wake the parent block handler thread
+            self.condition.release()
+            return
+
         self.node.state = RecipeElementState.RUNNING
-        self.node.opcServiceNode.callMethod(self.methodName)
-        while self.node.opcServiceNode.State not in self.type.complete:
-            pass
+        print('call Method')
+        self.node.opcServiceNode.callMethod(self.node.methodName)
+        validStates = self.node.type.running + self.node.type.start + self.node.type.complete
+        while self.node.opcServiceNode.State not in self.node.type.complete:
+            stateCopy = self.node.opcServiceNode.State
+            if stateCopy not in validStates:
+                print(self.node.opcServiceNode.State in self.node.type.complete)
+                print(self.node.opcServiceNode.State in self.node.type.running)
+                self.node.state = RecipeElementState.ABORTED
+                self.condition.notify()  # wake the parent block handler thread
+                self.condition.release()
+                return
+        self.node.state = RecipeElementState.COMPLETED
         self.condition.notify() # wake the parent block handler thread
         self.condition.release()
         print('end Element Thread, ' + self.node.name)
@@ -292,14 +305,16 @@ class RecipeTreeThread(threading.Thread):
         self.stdout = stdout
         self.stderr = None
         self.root = recipeRoot
-        self.state = RecipeElementState.WAITING
+        self.root.state = RecipeElementState.WAITING
         self.condition = condition
     def run(self):
         self.condition.acquire()
         print('start Tree Thread, '+self.root.name)
-        self.state = RecipeElementState.RUNNING
-        self.executeServiceTree(self.root)
-        self.state = RecipeElementState.COMPLETED
+        self.root.state = RecipeElementState.RUNNING
+        if self.executeServiceTree(self.root):
+            self.root.state = RecipeElementState.COMPLETED
+        else:
+            self.root.state = RecipeElementState.ABORTED
         print('end Tree Thread, '+self.root.name)
         self.condition.notify()
         self.condition.release()
@@ -307,14 +322,11 @@ class RecipeTreeThread(threading.Thread):
     def executeService(self, serviceNode):
         condition = threading.Condition()
         condition.acquire()
-        timeout = 10.0
         re = RecipeElementThread(sys.stdout, serviceNode, condition)
         re.start()
         condition.wait(serviceNode.timeout)
         condition.release()
-        if not re.is_alive() and serviceNode.opcServiceNode.State in re.type.complete:
-            serviceNode.state = RecipeElementState.COMPLETED
-        else:
+        if serviceNode.state != RecipeElementState.COMPLETED:
             serviceNode.state = RecipeElementState.ABORTED
             if re.is_alive():
                 logger.error('TimeOut Thrown, MethodCall went too long')
@@ -337,6 +349,8 @@ class RecipeTreeThread(threading.Thread):
             if parentNode.state == RecipeElementState.ABORTED:
                 self.state = parentNode.state
                 return False
+            else:
+                return True
 
         for elementId in parentNode.sortList:
             node = parentNode.childs[elementId]
@@ -350,7 +364,7 @@ class RecipeTreeThread(threading.Thread):
                         thread = RecipeTreeThread(self.stdout, p, condition)
                         threads.append(thread)
                         thread.start()
-                    #wait for finish
+                    #wait for every block finished
                     while  threadCount > 0:
                         condition.wait()
                         threadCount -=1
@@ -380,21 +394,23 @@ class RecipeRootThread(threading.Thread):
     Server -> RecipeHandler -> starts Root Thread -> respsonse
     Root Thread waits until Recipe is finished. Simply start a Tree Thread.
     """
-    def __init__(self,stdout, node):
+    def __init__(self,stdout, recipe):
         threading.Thread.__init__(self)
         self.stdout = stdout
-        self.node = node
+        self.recipe = recipe
 
     def run(self):
-        print('start Root Recipe Thread, '+self.node.name)
+        runBlockNode = self.recipe.parser.recipe.runBlock
+        print('start Root Recipe Thread, '+self.recipe.parser.recipe.name)
         condition = threading.Condition()
         condition.acquire()
 
-        thread = RecipeTreeThread(self.stdout, self.node, condition)
+        thread = RecipeTreeThread(self.stdout, runBlockNode, condition)
         thread.start()
         condition.wait()
         condition.release()
-        print('end Root Recipe Thread, ' + self.node.name)
+        RecipeHandler.instance.finishRecipe()
+        print('end Root Recipe Thread, ' + self.recipe.parser.recipe.name)
 
 
 class RecipeFileObject:
@@ -455,7 +471,8 @@ class RecipeHandler:
 
         def __init__(self, anlage):
             self.recipes = []
-            self.actualRecipeId = -1
+            self.actualRecipeThread = None
+            self.completeRecipe = None
             self.anlage = anlage
           #  for file in os.listdir(main.settings.RECIPE_DIR):
           #      self.recipes.append(Recipe(os.path.join(main.settings.RECIPE_DIR,file)))
@@ -510,13 +527,15 @@ class RecipeHandler:
 
         def startRecipeFromFilename(self, filename):
             recipe = RecipeFileObject(os.path.join(main.settings.RECIPE_DIR, filename))
-            thread = RecipeRootThread(sys.stdout, recipe.parser.recipe.runBlock)
+            thread = RecipeRootThread(sys.stdout, recipe)
             self.actualRecipeThread = thread
             thread.start()
             # Do not Wait, maybe set a Callback?
+            #self.actualRecipeThread = None
+
+        def finishRecipe(self):
+            self.completeRecipe = self.actualRecipeThread.recipe
             self.actualRecipeThread = None
-
-
 
         def getServices(self, recipeNode):
             services = []

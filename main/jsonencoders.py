@@ -83,6 +83,7 @@ class JsonDataEncoder:
             'name': obj.name,
             'method' : obj.method,
             'state': self.encode(obj.state),
+            'serviceType': self.encode(obj.type),
             'timeout': obj.timeout,
             'opcService': self.encode(obj.opcServiceNode)
         }
