@@ -36,8 +36,6 @@ urlpatterns = [
     url(r'^json/', views.getJsonInformation, name="JsonData"),
     url(r'^recipe/parse/(?P<recipeName>[\w.]{0,256})/$', views.recipeParse, name = "Parse Recipe"),
     url(r'^recipe/start/(?P<recipeName>[\w.]{0,256})/$', views.recipeStart, name="JSON Start Recipe"),
-    url(r'^recipe/pause/(?P<recipeName>[\w-]+)/$', views.recipePause, name="JSON Pause Recipe"),
-    url(r'^recipe/stop/(?P<recipeName>[\w-]+)/$', views.recipeStop, name="JSON stop Recipe"),
     #url(static(settings.STATIC_URL, serve=True)),
     #url(r'^ajax/price/(?P<aktien>[0-9]+)/$', views.ajaxPrice, name="AjaxPreis"),
     # Catchall
@@ -49,5 +47,6 @@ handler500 = "django.views.defaults.server_error"
 
 # global Objects
 TeilAnlage = models.OpcPlant([ settings.MIXER, settings.REACTOR])
-RecipeLoader = models.RecipeHandler(TeilAnlage)
+models.RecipeHandler.anlage = TeilAnlage
+RecipeLoader = models.RecipeHandler()
 

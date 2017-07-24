@@ -59,10 +59,10 @@ class JsonDataEncoder:
             'state': self.encode(obj.state),
             'timeout': obj.timeout
             }
-        elif isinstance(obj, TopologyFileObject):
+        elif isinstance(obj, XmlTopologyParser):
             return self.encode({
-            'file': obj.fileName,
-            'interface': self.encode(obj.parser.interface)
+            'valid': obj.isValid,
+            'interface': self.encode(obj.interface)
         })
         elif isinstance(obj, XmlRecipeInstance):
             return {

@@ -1,0 +1,65 @@
+<!DOCTYPE ComosXmlExport [
+
+<!ELEMENT ComosXmlExport (plant)>
+<!ELEMENT plant (interface,recipe?)>
+    <!ATTLIST plant
+            RE_ID       CDATA   "C00"
+            ParentRE    CDATA   "C00"
+    >
+    <!ELEMENT interface (module+,opcservice+)>
+        <!ATTLIST interface
+            RE_ID       CDATA   "C00"
+            ParentRE    CDATA   "C00"
+            name        CDATA   #REQUIRED
+        >
+        <!ELEMENT module (EMPTY)>
+            <!ATTLIST module
+                RE_ID       CDATA   #REQUIRED
+                ParentRE    CDATA   #REQUIRED
+                opcua_url   CDATA   #REQUIRED
+                opcua_name  CDATA   #REQUIRED
+                Type        CDATA   #REQUIRED
+                position    CDATA   #REQUIRED
+            >
+        <!ELEMENT opcservice (contiType)>
+            <!ATTLIST module
+                RE_ID       CDATA   #REQUIRED
+                ParentRE    CDATA   #REQUIRED
+                opcName     CDATA   #REQUIRED
+                opcID       CDATA   #IMPLIED
+                name        CDATA   #REQUIRED
+            >
+            <!ELEMENT contiType (#PCDATA)>
+<!ELEMENT recipe (creationDate, author, runblock)>
+    <!ATTLIST recipe
+        RE_ID       CDATA   "C00"
+        ParentRE    CDATA   "C00"
+        name        CDATA   #REQUIRED
+    >
+    <!ELEMENT creationDate (#PCDATA)>
+    <!ELEMENT author (#PCDATA)>
+    <!ELEMENT runblock (recipestep*, service+)>
+        <!ATTLIST runblock
+            RE_ID       CDATA   #REQUIRED
+            ParentRE    CDATA   "C00"
+            name        CDATA   #REQUIRED
+            type        CDATA   #FIXED "SeriellerBlock"
+        >
+        <!ELEMENT recipestep (EMPTY)>
+            <!ATTLIST recipestep
+                RE_ID       CDATA   #REQUIRED
+                ParentRE    CDATA   #REQUIRED
+                name        CDATA   #REQUIRED
+                type        CDATA   #REQUIRED
+                TypeRE      CDATA   #REQUIRED
+            >
+        <!ELEMENT service (method, linkedOPCID?, serviceID)>
+            <!ATTLIST recipestep
+                RE_ID       CDATA   #REQUIRED
+                ParentRE    CDATA   #REQUIRED
+                NameRE      CDATA   #REQUIRED
+            >
+            <!ELEMENT method (#PCDATA)>
+            <!ELEMENT linkedOPCID (#PCDATA)>
+            <!ELEMENT serviceID (#PCDATA)>
+]>

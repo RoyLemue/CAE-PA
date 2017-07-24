@@ -11,8 +11,6 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-#from . import models
-import main.models
 
 ########################
 # MAIN DJANGO SETTINGS #
@@ -47,7 +45,11 @@ PROJECT_APP = os.path.basename(PROJECT_APP_PATH)
 PROJECT_ROOT = BASE_DIR = os.path.dirname(PROJECT_APP_PATH)
 
 RECIPE_DIR = os.path.join(PROJECT_ROOT, 'recipe')#os.path.join(STATIC_ROOT, *['media', 'recipes'])
+if not os.path.exists(RECIPE_DIR):
+    os.mkdir(RECIPE_DIR)
 TOPOLOGY_DIR = os.path.join(PROJECT_ROOT, 'topologie')
+if not os.path.exists(TOPOLOGY_DIR):
+    os.mkdir(TOPOLOGY_DIR)
 
 # Every cache key will get prefixed with this value - here we set it to
 # the name of the directory the project is in to try and use something

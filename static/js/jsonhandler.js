@@ -196,17 +196,49 @@ function startRecipe(recipe){
     $.getJSON("/recipe/start/"+recipe+"/",
         function (data){
             $.toaster({'title': 'Rezeptstart',
-            'message':'Das Rezept \''+recipe+'\' wurde gestartet.',
-            'priority': 'success',
-            'timeout': 5000});
+                'message':'Das Rezept \''+recipe+'\' wurde gestartet.',
+                'priority': 'success',
+                'settings': {
+                    'timeout' : 5000
+                }
+            });
     })
 }
+
+function parseRecipe(recipe){
+    $.getJSON("/recipe/parse/"+recipe+"/",
+        function (data){
+            if(data.status == 'OK'){
+                $.toaster({'title': 'Rezept',
+                    'message':'Das Rezept ist valide.',
+                    'priority': 'success',
+                    'settings': {
+                        'timeout' : 5000
+                    }
+                });
+            }
+            else {
+                $.toaster({'title': 'Rezept',
+                    'message': data.message,
+                    'priority': 'danger',
+                    'settings': {
+                        'timeout' : 10000
+                    }
+                });
+            }
+
+    })
+}
+
 function callServiceMethod(module, service, method){
     $.getJSON("/module/"+module+"/call/"+service+"/"+method+"/",
         function(data) {
             $.toaster({'title': 'Serviceaufruf '+method,
-            'message':'Der Service '+module+'.'+service+' konnte erfolgreich ausgeführt werden',
-            'priority': 'success',
-            'timeout': 5000});
+                'message':'Der Service '+module+'.'+service+' konnte erfolgreich ausgeführt werden',
+                'priority': 'success',
+                'settings': {
+                    'timeout' : 5000
+                }
+            });
     });
 }

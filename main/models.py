@@ -14,100 +14,6 @@ import xml.etree.ElementTree as et
 from main.xmlmodels import *
 import threading
 
-import logging
-
-logger = logging.getLogger('django')
-
-class OpcState(Enum):
-    IDLE = 4
-    STARTING = 3
-    RUNNING = 6
-    PAUSING = 13
-    PAUSED = 5
-    RESUMING = 14
-    HOLDING = 10
-    HELD = 11
-    UNHOLDING = 12
-    COMPLETING = 16
-    COMPLETE = 17
-    RESETTING = 15
-    STOPPING = 7
-    STOPPED = 2
-    ABORTING = 8
-    ABORTED = 9
-    CLEARING = 1
-
-RUN_STATES = [OpcState.RUNNING,
-                  OpcState.PAUSING,
-                  OpcState.PAUSED,
-                  OpcState.RESUMING]
-
-ACTIVE_STATES = [OpcState.RUNNING,
-                  OpcState.PAUSING,
-                  OpcState.PAUSED,
-                  OpcState.RESUMING,
-                 OpcState.IDLE,
-                 OpcState.STARTING,
-                 OpcState.HOLDING,
-                 OpcState.HELD,
-                 OpcState.UNHOLDING,
-                 OpcState.RESETTING,
-                 OpcState.COMPLETING,
-                 OpcState.COMPLETE]
-
-NORMAL_STATES = [OpcState.RUNNING,
-                  OpcState.PAUSING,
-                  OpcState.PAUSED,
-                  OpcState.RESUMING,
-                 OpcState.IDLE,
-                 OpcState.STARTING,
-                 OpcState.HOLDING,
-                 OpcState.HELD,
-                 OpcState.UNHOLDING,
-                 OpcState.RESETTING,
-                 OpcState.COMPLETING,
-                 OpcState.COMPLETE,
-                 OpcState.STOPPING,
-                 OpcState.STOPPED,
-                 OpcState.CLEARING]
-
-class OpcMethod(Enum):
-    START = 2
-    PAUSE = 6
-    RESUME = 7
-    HOLD = 4
-    UNHOLD = 5
-    RESET = 1
-    STOP = 3
-    ABORT = 8
-    CLEAR = 9
-
-STATE_MAP = {
-    b'idle' : OpcState.IDLE,
-    b'complete' : OpcState.COMPLETE,
-    b'aborting': OpcState.ABORTING,
-    b'aborted': OpcState.ABORTED,
-    b'running' : OpcState.RUNNING,
-    b'pausing' : OpcState.PAUSING,
-    b'paused' : OpcState.PAUSED,
-    b'holding': OpcState.HOLDING,
-    b'held': OpcState.HELD,
-    b'unholding': OpcState.UNHOLDING,
-    b'stopping': OpcState.STOPPING,
-    b'stopped': OpcState.STOPPED,
-}
-METHOD_MAP = {
-    'start' : OpcMethod.START,
-    'pause': OpcMethod.PAUSE,
-    'resume': OpcMethod.RESUME,
-    'hold': OpcMethod.HOLD,
-    'unhold': OpcMethod.UNHOLD,
-    'reset': OpcMethod.RESET,
-    'stop': OpcMethod.STOP,
-    'abort': OpcMethod.ABORT,
-    'clear': OpcMethod.CLEAR,
-}
-
 class OpcService:
 
     def __init__(self, node, client):
@@ -198,13 +104,15 @@ class OpcClient(Client):
         self.disconnect()
 
 class OpcPlant:
+    """
+    The OpcPlant contains all the Modules with their Services.
+    """
     def __init__(self, nodes):
         self.parts = {}
         for node in nodes:
             self.parts[node['name']] = OpcClient("opc.tcp://"+node['adress']+":" + node['port'], node['name'])
 
 class StateChangeHandler(object):
-
     """
     Subscription Handler. To receive events from server for a subscription
     data_change and event methods are called directly from receiving thread.
@@ -229,27 +137,6 @@ class RecipeCommand(Enum):
     START = 1
     STOP = 2
     PAUSE = 3
-
-
-class RecipeType:
-    def __init__(self, start, running, complete):
-        self.start = start
-        self.running = running
-        self.complete = complete
-
-
-#Allowed Starting States and Running States and the completing State
-RECIPE_COMMAND = {
-    OpcMethod.START : RecipeType([OpcState.IDLE], [OpcState.STARTING], [OpcState.RUNNING]),
-    OpcMethod.PAUSE : RecipeType([OpcState.RUNNING],[OpcState.PAUSING],[OpcState.PAUSED]),
-    OpcMethod.RESUME: RecipeType([OpcState.PAUSED],[OpcState.RESUMING],[OpcState.RUNNING]),
-    OpcMethod.HOLD: RecipeType(RUN_STATES,[OpcState.HOLDING],[OpcState.HELD]),
-    OpcMethod.UNHOLD: RecipeType([OpcState.HELD],[OpcState.UNHOLDING],[OpcState.RUNNING]),
-    OpcMethod.RESET: RecipeType([OpcState.COMPLETE, OpcState.STOPPED, OpcState.ABORTED],[OpcState.RESETTING],[OpcState.IDLE]),
-    OpcMethod.STOP: RecipeType(ACTIVE_STATES,[OpcState.STOPPING],[OpcState.STOPPED]),
-    OpcMethod.ABORT: RecipeType(NORMAL_STATES,[OpcState.ABORTING],[OpcState.ABORTED]),
-    OpcMethod.CLEAR: RecipeType([OpcState.ABORTED],[OpcState.CLEARING],[OpcState.STOPPED]),
-}
 
 class RecipeElementThread(threading.Thread):
     def __init__(self,stdout, node, condition):
@@ -400,8 +287,8 @@ class RecipeRootThread(threading.Thread):
         self.recipe = recipe
 
     def run(self):
-        runBlockNode = self.recipe.parser.recipe.runBlock
-        print('start Root Recipe Thread, '+self.recipe.parser.recipe.name)
+        runBlockNode = self.recipe.runBlock
+        print('start Root Recipe Thread, '+self.recipe.name)
         condition = threading.Condition()
         condition.acquire()
 
@@ -410,34 +297,38 @@ class RecipeRootThread(threading.Thread):
         condition.wait()
         condition.release()
         RecipeHandler.instance.finishRecipe()
-        print('end Root Recipe Thread, ' + self.recipe.parser.recipe.name)
+        print('end Root Recipe Thread, ' + self.recipe.name)
 
 
 class RecipeFileObject:
     def __init__(self, filename):
         self.fileName = filename
-        try:
-            self.parser = XmlRecipeParser(filename)
-        except et.ParseError or et.KeyError or et.AttributeError as e:
-            logger.error(e)
+    def getParsed(self, topology, plant):
+        return XmlRecipeParser(self.fileName, topology, plant)
 
 class TopologyFileObject:
     def __init__(self, filename):
         self.fileName = filename
-        try:
-            self.parser = XmlTopologyParser(filename)
-        except et.ParseError or et.KeyError or et.AttributeError as e:
-            logger.error(e)
+    def getParsed(self, plant):
+        return XmlTopologyParser(self.fileName, plant)
+
 
 
 
 class RecipeHandler:
+    """
+    Singleton Pattern
+    The Handler is responsible for the Recipes and the Topologies.
+    Also the Execution of the Recipes.
+    It is initialized with an OpcPlant
+    """
+    anlage = None
     instance = None
-    def __init__(self, anlage):
+    def __init__(self):
         if not RecipeHandler.instance:
-            RecipeHandler.instance = RecipeHandler.__RecipeHandler(anlage)
-    def __getattr__(self, name):
-        return getattr(self.instance, name)
+            RecipeHandler.instance = RecipeHandler.__RecipeHandler(RecipeHandler.anlage)
+    def __getattr__(name):
+        return getattr(RecipeHandler.instance, name)
 
     class __RecipeQueueThread(threading.Thread):
         def __init__(self, stdout, recipeQueue):
@@ -446,6 +337,11 @@ class RecipeHandler:
             self.stderr = None
             self.recipeQueue = recipeQueue
         def run(self):
+            """
+            Executes all ThreadElements after another.
+            Was just for debugging.
+            :return:
+            """
             for re in self.recipeQueue:
                 startTime = time.clock()
                 elapsedTime = 0
@@ -464,10 +360,11 @@ class RecipeHandler:
 
         def parseRecipe (self,filename):
             """
+            Loads a Recipe from the Recipe-Directory with given Filename and returnes the parsed RecipeFileObject.
             :param filename: Name of a File in the Recipe Directory
-            :return: parsed RecipeFileObject
+            :return: parsed XmlRecipeParser
             """
-            return RecipeFileObject(os.path.join(main.settings.RECIPE_DIR,filename))
+            return RecipeFileObject(os.path.join(main.settings.RECIPE_DIR,filename)).getParsed(self.actualTopology, self.anlage)
 
         def __init__(self, anlage):
             self.recipes = []
@@ -481,63 +378,49 @@ class RecipeHandler:
             for file in os.listdir(main.settings.TOPOLOGY_DIR):
                 self.topologies.append(TopologyFileObject(os.path.join(main.settings.TOPOLOGY_DIR,file)))
                 self.topologyId += 1
-            if self.checkTopology(self.topologies[0]):
-                self.actualTopology = self.topologies[0]
+            parsedTopology = self.topologies[0].getParsed(self.anlage)
+            if parsedTopology.isValid:
+                self.actualTopology = parsedTopology
             else:
                 logger.error("Invalid Topology")
             self.active = False
 
-        def checkTopology(self, topology):
+        def startRecipeFromFilename(self, filename):
             """
-            check topology against opcua namespace
-            :param topology: TopologyFileObject
-            :return Boolean: True when Topology is valid
+            Create RecipeFileObject and starts it with an RecipeRootThread,
+            if the FileObject is valid and no other Recipe is active.
+            :param filename: Name of a File in the Recipe Directory
+            :return: XmlRecipeParser
             """
-            lostServices = 0
-            for module in topology.parser.interface.modules.values():
-                anlagenModul = self.anlage.parts[module.name]
-                for service in module.services.values():
-                    opcService = anlagenModul.getService(service.opcName)
-                    if not opcService:
-                        logger.info(service.opcName + ' nicht gefunden')
-                        lostServices +=1
-                    else:
-                        logger.info(anlagenModul.name+' '+opcService.name+' gefunden')
-            if lostServices == 0:
-                return True
-            else:
-                return False
-
-        def checkRecipe(self, recipe):
-            """
-            check Recipe against Topology
-            :param recipe: RecipeFileObject
-            :return Boolean: True when Topology is valid
-            """
-            for index, topoModule in self.actualTopology.interface.modules:
-                recipeModule = recipe.interface.modules[index]
-                if topoModule.position != recipeModule.position:
-                    logger.error('Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein')
+            recipe = RecipeFileObject(os.path.join(main.settings.RECIPE_DIR, filename)).getParsed(self.actualTopology, self.anlage)
+            if recipe.isValid:
+                if self.actualRecipeThread == None:
+                    thread = RecipeRootThread(sys.stdout, recipe)
+                    self.actualRecipeThread = thread
+                    thread.start()
+                else:
+                    self.message = 'Rezept läuft noch.'
                     return False
-                for serviceIndex, topoService in topoModule.services:
-                    if topoService.opcName != recipeModule.services[serviceIndex].name:
-                        logger.error('Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein')
-                        return False
+            else:
+                self.message = recipe.message
+                return False
             return True
 
-        def startRecipeFromFilename(self, filename):
-            recipe = RecipeFileObject(os.path.join(main.settings.RECIPE_DIR, filename))
-            thread = RecipeRootThread(sys.stdout, recipe)
-            self.actualRecipeThread = thread
-            thread.start()
-            # Do not Wait, maybe set a Callback?
-            #self.actualRecipeThread = None
-
         def finishRecipe(self):
+            """
+            "Callback" is started by RecipeRootThread when all RecipeSteps are finished or the Recipe is aborted.
+            :return:
+            """
             self.completeRecipe = self.actualRecipeThread.recipe
             self.actualRecipeThread = None
 
         def getServices(self, recipeNode):
+            """
+            Gets a List with all Service-Calls from a given Recipe-Tree. Order is probably not right and parallelBlocks are serialized.
+            Just for Debugging.
+            :param recipeNode:
+            :return:
+            """
             services = []
             for child in recipeNode.childs.values():
                 if isinstance(child, XmlRecipeBlock):
@@ -547,11 +430,37 @@ class RecipeHandler:
             return services
 
         def startRecipeWithQueue(self, recipeElements):
-            for re in recipeElements:
-                topoService = self.actualTopology.parser.interface.modules[re.service.client.type].services[re.service.opcName]
-                if topoService.continous == False and OpcState.IDLE in re.type.start:
-                    re.type = RecipeType([OpcState.IDLE], [OpcState.STARTING, OpcState.RUNNING, OpcState.PAUSING, OpcState.PAUSED], [OpcState.COMPLETE])
-
+            """
+            Starts a QueueThread with the given Limain.settings.
+            :param recipeElements: List of RecipeElementThreads
+            :return: None
+            """
             thread = RecipeHandler.__RecipeQueueThread(sys.stdout, recipeElements)
             thread.start()
 
+
+        """
+        TODO Upload files with json and check xml syntax (not the topology)
+        and dont read directory every Get-Request (make the lists persistent)
+        """
+        def saveUploadedRecipe(self, file):
+            """
+            Copies the uploaded File from the tempDir to the RecipeDir
+            :param file: Uploaded File Handle
+            :return:
+            """
+            filename =  str(file)
+            with open(os.path.join(main.settings.RECIPE_DIR, filename), 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
+
+        def saveUploadedTopology(self, file):
+            """
+            Copies the uploaded File from the tempDir to the RecipeDir
+            :param file: Uploaded File Handle
+            :return:
+            """
+            filename =  str(file)
+            with open(os.path.join(main.settings.TOPOLOGY_DIR, filename), 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
