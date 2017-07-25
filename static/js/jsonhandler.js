@@ -145,16 +145,27 @@ function TRecipeBlock(element, data){
     this.name = data.name;
     this.type = data.type;
     this.order = data.order;
+    this.state = data.state.split('.')[1];
+
     this.childs = {}
     for(i in this.order){
         child = data.childs[this.order[i]];
         div = ''
         if(this.type == 'SeriellerBlock'){
             div = $('<li class="list-group-item"></li>');
+            if(this.state == 'WAITING')div.addClass('list-group-item-info');
+            else if(this.state == 'RUNNING')div.addClass('list-group-item-warning');
+            else if(this.state == 'ABORTED')div.addClass('list-group-item-danger');
+            else if(this.state == 'COMPLETED')div.addClass('list-group-item-success');
         }
         else {
             div = $('<td></td>');
+            if(this.state == 'WAITING')div.addClass('bg-info');
+            else if(this.state == 'RUNNING')div.addClass('bg-warning');
+            else if(this.state == 'ABORTED')div.addClass('bg-danger');
+            else if(this.state == 'COMPLETED')div.addClass('bg-success');
         }
+
         this.$element.append(div);
         //Service Node
         if(!child.type){
@@ -195,13 +206,25 @@ function TRecipe(element, data, options) {
 function startRecipe(recipe){
     $.getJSON("/recipe/start/"+recipe+"/",
         function (data){
-            $.toaster({'title': 'Rezeptstart',
-                'message':'Das Rezept \''+recipe+'\' wurde gestartet.',
-                'priority': 'success',
-                'settings': {
-                    'timeout' : 5000
-                }
-            });
+            if(data.status == 'OK'){
+                $.toaster({'title': 'Rezeptstart',
+                    'message':'Das Rezept \''+recipe+'\' wurde gestartet.',
+                    'priority': 'success',
+                    'settings': {
+                        'timeout' : 5000
+                    }
+                });
+            }
+            else {
+                $.toaster({'title': 'Rezeptstart',
+                    'message':  data.message,
+                    'priority': 'danger',
+                    'settings': {
+                        'timeout' : 5000
+                    }
+                });
+            }
+
     })
 }
 

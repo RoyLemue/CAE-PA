@@ -30,10 +30,11 @@ def getState(request, moduleName, serviceName):
 
 def getJsonInformation(request):
     TeilAnlage = RecipeHandler.instance.anlage
+    recipe = None
     if(RecipeHandler.instance.actualRecipeThread):
-        recipe = RecipeHandler.instance.actualRecipeThread.recipe
+        recipe = RecipeHandler.instance.actualRecipeThread.recipeParser
     elif(RecipeHandler.instance.completeRecipe):
-        recipe = RecipeHandler.instance.completeRecipe
+        recipe = RecipeHandler.instance.completeRecipe.recipeParser
     else:
         recipe = None
     #RecipeHandler.instance.startRecipeFromFilename('opcRecipe2.XML')

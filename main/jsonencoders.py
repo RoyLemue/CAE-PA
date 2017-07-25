@@ -39,11 +39,11 @@ class JsonDataEncoder:
             'services': self.encode(obj.ServiceList)
         }
 
-        elif isinstance(obj, RecipeFileObject):
+        elif isinstance(obj, XmlRecipeParser):
             return {
-            'file': obj.fileName,
-            'instance': self.encode(obj.parser.recipe),
-            'interface': self.encode(obj.parser.interface)
+            'valid': obj.isValid,
+            'instance': self.encode(obj.recipe),
+            'interface': self.encode(obj.interface)
         }
         elif isinstance(obj, RecipeType):
             return {
@@ -76,6 +76,7 @@ class JsonDataEncoder:
             'name': obj.name,
             'type': obj.blockType,
             'childs': self.encode(obj.childs),
+            'state': self.encode(obj.state),
             'order': self.encode(obj.sortList),
         }
         elif isinstance(obj, XmlRecipeServiceInstance):

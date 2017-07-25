@@ -149,10 +149,10 @@ class RecipeElementThread(threading.Thread):
 
 
     def run(self):
-        self.condition.acquire()
         print('start Element Thread, '+self.node.name+':'+self.node.methodName)
 
         if self.node.opcServiceNode.State not in self.node.type.start:
+            self.condition.acquire()
             self.node.state = RecipeElementState.ABORTED
             self.condition.notify()  # wake the parent block handler thread
             self.condition.release()
@@ -165,15 +165,17 @@ class RecipeElementThread(threading.Thread):
         while self.node.opcServiceNode.State not in self.node.type.complete:
             stateCopy = self.node.opcServiceNode.State
             if stateCopy not in validStates:
+                self.condition.acquire()
                 print(self.node.opcServiceNode.State in self.node.type.complete)
                 print(self.node.opcServiceNode.State in self.node.type.running)
                 self.node.state = RecipeElementState.ABORTED
-                self.condition.notify()  # wake the parent block handler thread
-                self.condition.release()
+                self.condition.notify()
+                self.condition.release() # wake the parent block handler thread
                 return
+        self.condition.acquire()
         self.node.state = RecipeElementState.COMPLETED
-        self.condition.notify() # wake the parent block handler thread
-        self.condition.release()
+        self.condition.notify()
+        self.condition.release() # wake the parent block handler thread
         print('end Element Thread, ' + self.node.name)
 
 class RecipeTreeThread(threading.Thread):
@@ -192,10 +194,8 @@ class RecipeTreeThread(threading.Thread):
         self.stdout = stdout
         self.stderr = None
         self.root = recipeRoot
-        self.root.state = RecipeElementState.WAITING
         self.condition = condition
     def run(self):
-        self.condition.acquire()
         print('start Tree Thread, '+self.root.name)
         self.root.state = RecipeElementState.RUNNING
         if self.executeServiceTree(self.root):
@@ -203,15 +203,16 @@ class RecipeTreeThread(threading.Thread):
         else:
             self.root.state = RecipeElementState.ABORTED
         print('end Tree Thread, '+self.root.name)
+        self.condition.acquire() # lock
         self.condition.notify()
-        self.condition.release()
+        self.condition.release() # unlock
 
     def executeService(self, serviceNode):
         condition = threading.Condition()
-        condition.acquire()
+        condition.acquire() # lock
         re = RecipeElementThread(sys.stdout, serviceNode, condition)
         re.start()
-        condition.wait(serviceNode.timeout)
+        condition.wait(serviceNode.timeout) # unlock, relock on notify or timeout
         condition.release()
         if serviceNode.state != RecipeElementState.COMPLETED:
             serviceNode.state = RecipeElementState.ABORTED
@@ -245,7 +246,7 @@ class RecipeTreeThread(threading.Thread):
                 if node.blockType == 'ParallelerBlock':
                     threadCount = len(node.childs)
                     condition = threading.Condition()
-                    condition.acquire()
+                    condition.acquire() # lock
                     threads = []
                     for p in node.childs.values():
                         thread = RecipeTreeThread(self.stdout, p, condition)
@@ -253,24 +254,27 @@ class RecipeTreeThread(threading.Thread):
                         thread.start()
                     #wait for every block finished
                     while  threadCount > 0:
-                        condition.wait()
+                        condition.wait() # unlock, lock if awaken
                         threadCount -=1
                     # all Threads finished, check normal Complete
                     condition.release()
                     for thread in threads:
-                        if thread.state != RecipeElementState.COMPLETED:
+                        if thread.root.state != RecipeElementState.COMPLETED:
                             logger.error('Child Thread failed')
+                            node.state = RecipeElementState.ABORTED
                             return False
+                    node.state = RecipeElementState.COMPLETED
 
                 if node.blockType == 'SeriellerBlock':
                     runningNormal = self.executeServiceTree(node)
                     if runningNormal == False:
                         logger.error('Serial-Block failed')
+                        node.state = RecipeElementState.ABORTED
                         return False
+                    node.state = RecipeElementState.COMPLETED
             elif isinstance(node, XmlRecipeServiceInstance):
                 self.executeService(node)
                 if node.state == RecipeElementState.ABORTED:
-                    self.state = node.state
                     return False
 
         return True
@@ -284,20 +288,20 @@ class RecipeRootThread(threading.Thread):
     def __init__(self,stdout, recipe):
         threading.Thread.__init__(self)
         self.stdout = stdout
-        self.recipe = recipe
+        self.recipeParser = recipe
 
     def run(self):
-        runBlockNode = self.recipe.runBlock
-        print('start Root Recipe Thread, '+self.recipe.name)
+        runBlockNode = self.recipeParser.recipe.runBlock
+        print('start Root Recipe Thread, '+self.recipeParser.recipe.name)
         condition = threading.Condition()
-        condition.acquire()
+        condition.acquire() # lock
 
         thread = RecipeTreeThread(self.stdout, runBlockNode, condition)
         thread.start()
-        condition.wait()
-        condition.release()
+        condition.wait() # unlock, relock if awaken
+        condition.release() # unlock
         RecipeHandler.instance.finishRecipe()
-        print('end Root Recipe Thread, ' + self.recipe.name)
+        print('end Root Recipe Thread, ' + self.recipeParser.recipe.name)
 
 
 class RecipeFileObject:
@@ -411,7 +415,7 @@ class RecipeHandler:
             "Callback" is started by RecipeRootThread when all RecipeSteps are finished or the Recipe is aborted.
             :return:
             """
-            self.completeRecipe = self.actualRecipeThread.recipe
+            self.completeRecipe = self.actualRecipeThread
             self.actualRecipeThread = None
 
         def getServices(self, recipeNode):

@@ -185,10 +185,9 @@ class XmlRecipeParser:
             self.interface = XmlRecipeInterface(self.anlage.find('interface'))
             # instance has only to be parsed, if interface is valid
 
-            self.checkTopology(plant, topology)
-
-            self.recipe = XmlRecipeInstance(self.anlage.find('recipe'), self.interface)
-            self.__valid = True
+            if self.checkTopology(plant, topology):
+                self.recipe = XmlRecipeInstance(self.anlage.find('recipe'), self.interface)
+                self.__valid = True
         except Exception as e:
             self.message = str(traceback.format_exc())
             logger.error(str(e))
@@ -209,12 +208,14 @@ class XmlRecipeParser:
         for index, topoModule in topology.interface.modules.items():
             recipeModule = self.interface.modules[index]
             if topoModule.position != recipeModule.position:
-                logger.error('Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein')
+                self.message = 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'
+                logger.error(self.message)
                 self.__valid = False
                 return False
             for serviceIndex, topoService in topoModule.services.items():
                 if topoService.opcName != recipeModule.services[serviceIndex].name:
-                    logger.error('Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein')
+                    self.message = 'Modulverschaltung des Rezeptes stimmt nicht mit aktueller Verschaltung überein'
+                    logger.error(self.message)
                     self.__valid = False
                     return False
         self.__valid = True
@@ -255,6 +256,7 @@ class XmlRecipeBlock:
         keyList = []
         blockTypeString = Node.attrib['type']
         self.blockType = regex.split('\!|\|', blockTypeString)[-1:][0]
+        self.state = RecipeElementState.WAITING
 
       #  print (nodeList.keys())
         for poolNode in blockPool:
